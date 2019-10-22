@@ -1,4 +1,4 @@
-from bpy.types import Panel, UIList
+from bpy.types import Panel, UIList, Menu
 import bpy
 from . import utils
 
@@ -20,9 +20,14 @@ class LightfieldButtonsPanel:
                 return True
         return False
 
-# TODO: move resolution settings to 3dview panel
+
+# -------------------------------------------------------------------
+#   Data tab
+# -------------------------------------------------------------------
+
 class DATA_PT_lightfield_setup(LightfieldButtonsPanel, Panel):
     bl_label = 'Setup'
+    bl_options = {'HIDE_HEADER'}
 
     def draw(self, context):
         lf = utils.get_active_lightfield()
@@ -30,14 +35,9 @@ class DATA_PT_lightfield_setup(LightfieldButtonsPanel, Panel):
             return
 
         layout = self.layout
+        layout.label(text="Lightfield of type: {}".format(lf.lf_type.capitalize()))
         layout.use_property_split = True
         layout.use_property_decorate = False
-
-        # Resolution
-        col = layout.column(align=True)
-        col.prop(lf, "res_x", text='Resolution X')
-        col.prop(lf, "res_y", text='Y')
-
         # Number of cameras
         col = layout.column(align=True)
         # Only needed for cuboid and plane
@@ -51,13 +51,51 @@ class DATA_PT_lightfield_setup(LightfieldButtonsPanel, Panel):
         if lf.lf_type in ['CYLINDER', 'SPHERE']:
             col.prop(lf, "num_cams_radius", text='Circumference')
 
+
+class DATA_PT_lightfield_camera(LightfieldButtonsPanel, Panel):
+    bl_label = 'Camera Settings'
+
+    def draw(self, context):
+        lf = utils.get_active_lightfield()
+        if lf is None:
+            return
+
+        layout = self.layout
+        layout.use_property_split = True
+
+        cam = lf.data_camera
+
+        # Render as cube camera
         col = layout.column(align=True)
-        col.operator("object.lightfield_delete")
+        col.prop(lf, "cube_camera", text="Cube Camera")
+
+        # FOV
+        col = layout.column()
+        if not lf.cube_camera:
+            if cam.lens_unit == 'MILLIMETERS':
+                col.prop(cam, "lens")
+            elif cam.lens_unit == 'FOV':
+                col.prop(cam, "angle")
+            col.prop(cam, "lens_unit")
+
+        # Sensor fit
+        col = layout.column()
+        col.prop(cam, "sensor_fit")
+
+        if cam.sensor_fit == 'AUTO':
+            col.prop(cam, "sensor_width", text="Size")
+        else:
+            sub = col.column(align=True)
+            sub.active = cam.sensor_fit == 'HORIZONTAL'
+            sub.prop(cam, "sensor_width", text="Width")
+
+            sub = col.column(align=True)
+            sub.active = cam.sensor_fit == 'VERTICAL'
+            sub.prop(cam, "sensor_height", text="Height")
 
 
 class DATA_PT_lightfield_dof(LightfieldButtonsPanel, Panel):
     bl_label = "Depth of Field"
-    bl_options = {'DEFAULT_CLOSED'}
     COMPAT_ENGINES = {'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 
     def draw_header(self, context):
@@ -113,140 +151,9 @@ class DATA_PT_lightfield_dof_aperture(LightfieldButtonsPanel, Panel):
         col.prop(dof, "aperture_ratio")
 
 
-class DATA_PT_lightfield_camera(LightfieldButtonsPanel, Panel):
-    bl_label = 'Camera Settings'
-
-    def draw(self, context):
-        lf = utils.get_active_lightfield()
-        if lf is None:
-            return
-
-        layout = self.layout
-        layout.use_property_split = True
-
-        cam = lf.data_camera
-
-        # Render as cube camera
-        col = layout.column(align=True)
-        col.prop(lf, "cube_camera", text="Cube Camera")
-
-        # FOV
-        col = layout.column()
-        if not lf.cube_camera:
-            if cam.lens_unit == 'MILLIMETERS':
-                col.prop(cam, "lens")
-            elif cam.lens_unit == 'FOV':
-                col.prop(cam, "angle")
-            col.prop(cam, "lens_unit")
-
-        # Sensor fit
-        col = layout.column()
-        col.prop(cam, "sensor_fit")
-
-        if cam.sensor_fit == 'AUTO':
-            col.prop(cam, "sensor_width", text="Size")
-        else:
-            sub = col.column(align=True)
-            sub.active = cam.sensor_fit == 'HORIZONTAL'
-            sub.prop(cam, "sensor_width", text="Width")
-
-            sub = col.column(align=True)
-            sub.active = cam.sensor_fit == 'VERTICAL'
-            sub.prop(cam, "sensor_height", text="Height")
-
-
-# TODO: move to 3dview panel
-class DATA_PT_lightfield_rendering(LightfieldButtonsPanel, Panel):
-    bl_label = 'Rendering'
-
-    def draw(self, context):
-        lf = utils.get_active_lightfield()
-        if lf is None:
-            return
-
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        col = layout.column(align=True)
-        col.prop(lf, "output_directory")
-
-        col = layout.column(align=True)
-        col.prop(lf, "sequence_start", text="Frame Start")
-        col.prop(lf, "sequence_end", text="End")
-        col.prop(lf, "sequence_steps", text="Step")
-
-
-# TODO: move to 3dview panel
-class DATA_PT_lightfield_config(LightfieldButtonsPanel, Panel):
-    bl_label = 'Store/Load'
-
-    def draw(self, context):
-        lf = utils.get_active_lightfield()
-        if lf is None:
-            return
-
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        col = layout.column(align=True)
-        col.prop(lf, "path_config_file")
-
-        # row = layout.column(align=True)
-
-        # row.operator("scene.load_lightfield", text="Load", icon="EXPORT")
-        # row.operator("scene.save_lightfield", text="Save", icon="IMPORT")
-
-
-class VIEW3D_MT_lightfield_add(bpy.types.Menu):
-    """
-    Menu for adding lightfields
-    """
-    bl_idname = "VIEW3D_MT_lightfield_add"
-    bl_label = "Lightfield"
-
-    def draw(self, context):
-        layout = self.layout
-
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        layout.operator('object.lightfield_add',
-                        text="Lightfield Plane",
-                        icon='MESH_GRID').action = 'PLANE'
-        layout.operator('object.lightfield_add',
-                        text="Lightfield Cuboid",
-                        icon='CUBE').action = 'CUBOID'
-        layout.operator('object.lightfield_add',
-                        text="Lightfield Cylinder",
-                        icon='MESH_CYLINDER').action = 'CYLINDER'
-        layout.operator('object.lightfield_add',
-                        text="Lightfield Sphere",
-                        icon='SPHERE').action = 'SPHERE'
-
-
-def add_lightfield(self, context):
-    """
-    Function to be appended to an existing menu.
-    Allows for adding lightfields to the scene.
-    """
-    self.layout.menu("VIEW3D_MT_lightfield_add", icon='LIGHTPROBE_GRID')
-
-
-class VIEW3D_MT_lightfield_delete(bpy.types.Menu):
-    """
-    Menu for deleting objects
-    """
-    bl_idname = "VIEW3D_MT_lightfield_delete"
-    bl_label = "Delete lightfield"
-
-    def draw(self, context):
-        layout = self.layout
-
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        layout.operator("object.delete", text="Delete").use_global = False
-
-        layout.operator("object.lightfield_delete", text="Delete Lightfield")
-
+# -------------------------------------------------------------------
+#   Settings tab in 3D view
+# -------------------------------------------------------------------
 
 class LIGHTFIELD_UL_items(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_property, index, flt_flag):
@@ -266,9 +173,8 @@ class LIGHTFIELD_UL_items(UIList):
         print('invoke')
 
 
-class VIEW3D_PT_lightfields(bpy.types.Panel):
+class LIGHTFIELD_PT_list(Panel):
     bl_label = "Lightfields"
-    bl_idname = "VIEW3D_PT_lightfields"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = 'Lightfield'
@@ -312,7 +218,112 @@ class VIEW3D_PT_lightfields(bpy.types.Panel):
         layout.separator()
 
 
-class LIGHTFIELD_PT_settings(bpy.types.Panel):
+class LIGHTFIELD_PT_rendering(Panel):
+    bl_label = 'Rendering'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = 'Lightfield'
+    bl_context = "objectmode"
+
+    def draw(self, context):
+        if context.scene.lightfield_index == -1:
+            return
+        lf = context.scene.lightfield[context.scene.lightfield_index]
+        lf = (utils.get_lightfield_class(lf.lf_type))(lf)
+
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        # Resolution
+        col = layout.column(align=True)
+        col.prop(lf, "res_x", text='Resolution X')
+        col.prop(lf, "res_y", text='Y')
+
+        col = layout.column(align=True)
+        col.prop(lf, "sequence_start", text="Frame Start")
+        col.prop(lf, "sequence_end", text="End")
+        col.prop(lf, "sequence_steps", text="Step")
+
+
+class LIGHTFIELD_PT_preview(Panel):
+    bl_label = 'Preview'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = 'Lightfield'
+    bl_context = "objectmode"
+
+    def draw(self, context):
+        if context.scene.lightfield_index == -1:
+            return
+        lf = context.scene.lightfield[context.scene.lightfield_index]
+        lf = (utils.get_lightfield_class(lf.lf_type))(lf)
+
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        col = layout.column(align=True)
+        col.label(text="Preview Camera:")
+        if lf.lf_type == 'CUBOID':
+            col.prop(lf, "camera_side", text="Side")
+        col.prop(lf, "camera_facing", text="Facing")
+
+        col = layout.column(align=True)
+        col.prop(lf, "camera_preview_index", text="Grid index")
+
+
+class LIGHTFIELD_PT_output(Panel):
+    bl_label = 'Output'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = 'Lightfield'
+    bl_context = "objectmode"
+
+    def draw(self, context):
+        if context.scene.lightfield_index == -1:
+            return
+        lf = context.scene.lightfield[context.scene.lightfield_index]
+        lf = (utils.get_lightfield_class(lf.lf_type))(lf)
+
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        col = layout.column(align=True)
+        col.prop(lf, "output_directory")
+
+        # TODO: add settings like RGB, image format, color depth and compression (see render tab)
+
+
+class LIGHTFIELD_PT_persistence(Panel):
+    bl_label = 'Persistence'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = 'Lightfield'
+    bl_context = "objectmode"
+
+    def draw(self, context):
+        if context.scene.lightfield_index == -1:
+            return
+        lf = context.scene.lightfield[context.scene.lightfield_index]
+        lf = (utils.get_lightfield_class(lf.lf_type))(lf)
+
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        col = layout.column(align=True)
+        col.prop(lf, "path_config_file")
+
+        # TODO: add persistence
+        # row = layout.column(align=True)
+
+        # row.operator("scene.load_lightfield", text="Load", icon="EXPORT")
+        # row.operator("scene.save_lightfield", text="Save", icon="IMPORT")
+
+
+class LIGHTFIELD_PT_settings(Panel):
     bl_label = "Lightfield"
     bl_idname = "LIGHTFIELD_PT_settings"
     bl_space_type = "VIEW_3D"
@@ -325,3 +336,40 @@ class LIGHTFIELD_PT_settings(bpy.types.Panel):
 
         layout = self.layout
         layout.use_property_split = True
+
+
+# -------------------------------------------------------------------
+#   Menus
+# -------------------------------------------------------------------
+
+class VIEW3D_MT_lightfield_add(Menu):
+    """
+    Menu for adding lightfields
+    """
+    bl_idname = "VIEW3D_MT_lightfield_add"
+    bl_label = "Lightfield"
+
+    def draw(self, context):
+        layout = self.layout
+
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        layout.operator('object.lightfield_add',
+                        text="Lightfield Plane",
+                        icon='MESH_GRID').action = 'PLANE'
+        layout.operator('object.lightfield_add',
+                        text="Lightfield Cuboid",
+                        icon='CUBE').action = 'CUBOID'
+        layout.operator('object.lightfield_add',
+                        text="Lightfield Cylinder",
+                        icon='MESH_CYLINDER').action = 'CYLINDER'
+        layout.operator('object.lightfield_add',
+                        text="Lightfield Sphere",
+                        icon='SPHERE').action = 'SPHERE'
+
+
+def add_lightfield(self, context):
+    """
+    Function to be appended to an existing menu.
+    Allows for adding lightfields to the scene.
+    """
+    self.layout.menu("VIEW3D_MT_lightfield_add", icon='LIGHTPROBE_GRID')

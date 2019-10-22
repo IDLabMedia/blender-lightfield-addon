@@ -69,10 +69,10 @@ class LightfieldPlane(LightfieldPropertyGroup):
         :return: Object.
         """
         name = self.construct_names()['space']
-        bpy.ops.mesh.primitive_plane_add(rotation=(math.pi, 0.0, 0.0))
+        bpy.ops.mesh.primitive_plane_add(location=(0, 0, 0), rotation=(math.pi, 0.0, 0.0))
         p1 = bpy.context.object
         dumped_mesh = p1.data
-        bpy.ops.mesh.primitive_plane_add()
+        bpy.ops.mesh.primitive_plane_add(location=(0, 0, 0))
         space = bpy.context.object
         space.name = name
         p1.select_set(True)
@@ -107,13 +107,16 @@ class LightfieldPlane(LightfieldPropertyGroup):
                 'front': "{}_Front".format(base)}
 
     def position_generator(self):
-        sx, sy, sz = self.obj_empty.scale
-        base_x = sx / (self.num_cams_x - 1)
-        base_y = sy / (self.num_cams_y - 1)
         cube = self.cube_camera
         for y in range(self.num_cams_y):
             for x in range(self.num_cams_x):
                 # TODO: implement cube_camera in plane lightfield
-                yield CameraPosition("view_{}f".format(y * self.num_cams_x + x), -0.5 * sx + x * base_x,
-                                     0.5 * sy - y * base_y,
-                                     0.0)
+                yield self.get_camera_pos(x, y)
+
+    def get_camera_pos(self, x, y):
+        base_x = 1 / (self.num_cams_x - 1)
+        base_y = 1 / (self.num_cams_y - 1)
+        return CameraPosition("view_{:04d}f".format(y * self.num_cams_x + x),
+                              -0.5 + x * base_x,
+                              0.5 - y * base_y,
+                              0.0)

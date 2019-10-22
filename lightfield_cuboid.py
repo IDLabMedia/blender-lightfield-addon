@@ -1,6 +1,8 @@
+import math
 import random
 import bpy
 import bmesh
+from .camera_position import CameraPosition
 
 from mathutils import Color
 from .lightfield import LightfieldPropertyGroup
@@ -91,7 +93,7 @@ class LightfieldCuboid(LightfieldPropertyGroup):
         :return: Object.
         """
         name = self.construct_names()['space']
-        bpy.ops.mesh.primitive_cube_add()
+        bpy.ops.mesh.primitive_cube_add(location=(0.0, 0.0, 0.0))
         space = bpy.context.object
         space.scale = [0.5] * 3
         space.name = name
@@ -119,3 +121,65 @@ class LightfieldCuboid(LightfieldPropertyGroup):
                 'grid': "{}_Grid".format(base),
                 'space': "{}_Space".format(base),
                 'front': "{}_Front".format(base)}
+
+    def position_generator(self):
+        # TODO: implement cube-map render
+        sides = ['f', 'b', 'l', 'r', 'u', 'd']
+        side_map = {'f': [self.num_cams_x, self.num_cams_y],
+                    'b': [self.num_cams_x, self.num_cams_y],
+                    'l': [self.num_cams_z, self.num_cams_y],
+                    'r': [self.num_cams_z, self.num_cams_y],
+                    'u': [self.num_cams_x, self.num_cams_z],
+                    'd': [self.num_cams_x, self.num_cams_z], }
+        for s in sides:
+            local_x_dir = side_map[s][0]
+            local_y_dir = side_map[s][1]
+            for local_y in range(local_y_dir):
+                for local_x in range(local_x_dir):
+                    yield self.get_camera_pos(s, local_x, local_y)
+
+    def get_camera_pos(self, side, x, y):
+        base_x = 1 / (self.num_cams_x - 1)
+        base_y = 1 / (self.num_cams_y - 1)
+        base_z = 1 / (self.num_cams_z - 1)
+
+        if side == 'f':
+            return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
+                                  -0.5 + x * base_x,
+                                  0.5 - y * base_y,
+                                  -0.5)
+
+        elif side == 'b':
+            return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
+                                  0.5 - x * base_x,
+                                  0.5 - y * base_y,
+                                  0.5,
+                                  theta=math.pi)
+
+        elif side == 'l':
+            return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_z + x),
+                                  -0.5,
+                                  0.5 - y * base_y,
+                                  0.5 - x * base_z,
+                                  theta=math.pi/2)
+
+        elif side == 'r':
+            return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_z + x),
+                                  0.5,
+                                  0.5 - y * base_y,
+                                  -0.5 + x * base_z,
+                                  theta=-math.pi/2)
+
+        elif side == 'u':
+            return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
+                                  -0.5 + x * base_x,
+                                  0.5,
+                                  0.5 - y * base_z,
+                                  alpha=math.pi/2)
+
+        elif side == 'd':
+            return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
+                                  -0.5 + x * base_x,
+                                  -0.5,
+                                  -0.5 + y * base_z,
+                                  alpha=-math.pi/2)

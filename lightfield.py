@@ -1,10 +1,9 @@
 import math
 import os
-import random
 
 import bpy
-from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, StringProperty, PointerProperty
-from . import update, camera_position
+from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty, PointerProperty, EnumProperty
+from . import update, file_utils
 
 
 class LightfieldPropertyGroup(bpy.types.PropertyGroup):
@@ -13,8 +12,6 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
     """
     # Constants
     LIGHTFIELD_COLLECTION = 'Lightfields'
-    FOCUS_INFINITY = 10000
-    PI = 3.14159256
 
     # -------------------------------------------------------------------
     #   Lightfield components
@@ -103,6 +100,45 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
     )
 
     # -------------------------------------------------------------------
+    #   Preview Properties
+    # -------------------------------------------------------------------
+
+    # Preview side
+    camera_side = EnumProperty(
+        name='camera side',
+        items=[
+            ('f', "Front", "Put camera on front side"),
+            ('b', "Back", "Put camera on back side"),
+            ('l', "Left", "Put camera on left side"),
+            ('r', "Right", "Put camera on right side"),
+            ('u', "Up", "Put camera on top side"),
+            ('d', "Down", "Put camera on down side"),
+        ],
+        default='f',
+        update=update.update_preview
+    )
+    # Preview facing
+    camera_facing = EnumProperty(
+        name='camera direction',
+        items=[
+            ('f', "Front", "Face preview camera to the front"),
+            ('b', "Back", "Face preview camera to the back"),
+            ('l', "Left", "Face preview camera to the left"),
+            ('r', "Right", "Face preview camera to the right"),
+            ('u', "Up", "Face preview camera up"),
+            ('d', "Down", "Face preview camera down"),
+        ],
+        default='f',
+        update=update.update_preview
+    )
+    # Camera preview index
+    camera_preview_index = IntProperty(
+        default=0,
+        min=0,
+        update=update.update_preview
+    )
+
+    # -------------------------------------------------------------------
     #   Animation Properties
     # -------------------------------------------------------------------
     # Start of the sequence
@@ -129,13 +165,13 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
     output_directory = StringProperty(
         name='',
         subtype='FILE_PATH',
-        default='tmp',
+        default=file_utils.get_default_output_directory(),
         description='Target directory for blender output',
     )
     path_config_file = StringProperty(
         name='',
         subtype='FILE_PATH',
-        default='tmp',
+        default=file_utils.get_default_path_config_file(),
         description='File path for light field config file',
     )
 
@@ -175,6 +211,7 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         # set the active object to LF container
         bpy.ops.object.select_all(action='DESELECT')
         lightfield.select_set(True)
+        lightfield.location = bpy.context.scene.cursor.location
         bpy.context.view_layer.objects.active = lightfield
 
         # Update lightfield references

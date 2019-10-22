@@ -88,9 +88,9 @@ class LIGHTFIELD_OT_select(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class OBJECT_OT_update_lightfield(bpy.types.Operator):
+class LIGHTFIELD_OT_update(bpy.types.Operator):
     """Update the light field setup"""
-    bl_idname = "scene.update_lightfield"
+    bl_idname = "lightfield.update"
     bl_label = """Update the light field setup"""
     bl_options = {'REGISTER'}
 
@@ -115,14 +115,71 @@ class OBJECT_OT_update_lightfield(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class OBJECT_OT_update_lightfield_camera(bpy.types.Operator):
+class LIGHTFIELD_OT_update_preview(bpy.types.Operator):
     """Update the light field setup"""
-    bl_idname = "scene.update_lightfield_camera"
+    bl_idname = "lightfield.update_preview"
+    bl_label = """Update the light field preview"""
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        lf = context.scene.lightfield[context.scene.lightfield_index]
+        lf = (utils.get_lightfield_class(lf.lf_type))(lf)
+
+        if lf.lf_type == 'PLANE':
+            if lf.camera_preview_index >= lf.num_cams_x * lf.num_cams_y:
+                lf.camera_preview_index = lf.num_cams_x * lf.num_cams_y - 1
+                return {'CANCELLED'}
+            elif lf.camera_preview_index < 0:
+                lf.camera_preview_index = 0
+                return {'CANCELLED'}
+            pos = lf.get_camera_pos(lf.camera_preview_index % lf.num_cams_x, lf.camera_preview_index // lf.num_cams_x)
+        elif lf.lf_type == 'CUBOID':
+            side_map = {'f': [lf.num_cams_x, lf.num_cams_y],
+                        'b': [lf.num_cams_x, lf.num_cams_y],
+                        'l': [lf.num_cams_z, lf.num_cams_y],
+                        'r': [lf.num_cams_z, lf.num_cams_y],
+                        'u': [lf.num_cams_x, lf.num_cams_z],
+                        'd': [lf.num_cams_x, lf.num_cams_z], }
+            if lf.camera_preview_index >= side_map[lf.camera_side][0] * side_map[lf.camera_side][1]:
+                lf.camera_preview_index = side_map[lf.camera_side][0] * side_map[lf.camera_side][1] - 1
+                return {'CANCELLED'}
+            elif lf.camera_preview_index < 0:
+                lf.camera_preview_index = 0
+                return {'CANCELLED'}
+            pos = lf.get_camera_pos(lf.camera_side,
+                                    lf.camera_preview_index % side_map[lf.camera_side][0],
+                                    lf.camera_preview_index // side_map[lf.camera_side][1])
+        elif lf.lf_type == 'CYLINDER':
+            if lf.camera_preview_index >= lf.num_cams_y * lf.num_cams_radius:
+                lf.camera_preview_index = lf.num_cams_y * lf.num_cams_radius - 1
+                return {'CANCELLED'}
+            elif lf.camera_preview_index < 0:
+                lf.camera_preview_index = 0
+                return {'CANCELLED'}
+            pos = lf.get_camera_pos(lf.camera_preview_index % lf.num_cams_y, lf.camera_preview_index // lf.num_cams_y)
+        elif lf.lf_type == 'SPHERE':
+            # TODO: implement sphere update preview
+            pos = None
+            pass
+        else:
+            raise KeyError()
+
+        ob = lf.obj_camera
+        ob.location = pos.location()
+        ob.rotation_euler = pos.rotation()
+
+        return {'FINISHED'}
+
+
+class LIGHTFIELD_OT_update_camera(bpy.types.Operator):
+    """Update the light field setup"""
+    bl_idname = "lightfield.update_camera"
     bl_label = """Update the light field camera"""
     bl_options = {'REGISTER'}
 
     def execute(self, context):
         lf = utils.get_active_lightfield()
+        collection = utils.get_lightfield_collection()
         if lf.cube_camera:
             lf.dummy_focal_length = lf.data_camera.lens
             lf.data_camera.angle = math.pi / 2
@@ -138,16 +195,9 @@ class LIGHTFIELD_OT_render(bpy.types.Operator):
     bl_label = """Render the lightfield"""
     bl_options = {'REGISTER'}
 
-    index = bpy.props.IntProperty(default=-1)
-
     def execute(self, context):
-        if self.index == -1:
-            lf = utils.get_active_lightfield()
-            if lf is None:
-                return {'CANCELLED'}
-        else:
-            lf = context.scene.lightfield[self.index]
-            lf = (utils.get_lightfield_class(lf.lf_type))(lf)
+        lf = context.scene.lightfield[context.scene.lightfield_index]
+        lf = (utils.get_lightfield_class(lf.lf_type))(lf)
 
         lf.render()
 
@@ -164,6 +214,7 @@ class OBJECT_OT_lightfield_delete(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     index = bpy.props.IntProperty(default=-1)
+    confirm = bpy.props.BoolProperty(name="Confirm", description="Prompt for confirmation", default=True)
 
     def execute(self, context):
         if self.index == -1:
@@ -183,6 +234,12 @@ class OBJECT_OT_lightfield_delete(bpy.types.Operator):
             context.scene.lightfield_index = len(lightfields) - 1
 
         return {'FINISHED'}
+
+    def invoke(self, context, event):
+        if not self.confirm:
+            return self.execute(context)
+        else:
+            return context.window_manager.invoke_confirm(self, event)
 
 
 class LIGHTFIELD_OT_delete_override(bpy.types.Operator):
@@ -206,9 +263,12 @@ class LIGHTFIELD_OT_delete_override(bpy.types.Operator):
         for o in context.selected_objects:
             if o in lfs:
                 bpy.ops.object.lightfield_delete('EXEC_DEFAULT',
-                                                 index=context.scene.lightfield[lfs.index(o)].index)
+                                                 index=context.scene.lightfield[lfs.index(o)].index,
+                                                 confirm=self.confirm)
             else:
                 bpy.data.objects.remove(o, do_unlink=True)
+
+        self.confirm = True
 
         return {'FINISHED'}
 

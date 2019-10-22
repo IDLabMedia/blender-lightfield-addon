@@ -2,6 +2,7 @@ import random
 import math
 import bpy
 import bmesh
+from .camera_position import CameraPosition
 
 from mathutils import Color
 from .lightfield import LightfieldPropertyGroup
@@ -52,9 +53,9 @@ class LightfieldCylinder(LightfieldPropertyGroup):
         # Add vertices
         for y in range(self.num_cams_y):
             for r in range(self.num_cams_radius):
-                bm.verts.new((0.5 * math.cos(r * 2 * math.pi / self.num_cams_radius),
+                bm.verts.new((-0.5 * math.sin(r * 2 * math.pi / self.num_cams_radius),
                               0.5 - y / (self.num_cams_y - 1),
-                              0.5 * math.sin(r * 2 * math.pi / self.num_cams_radius)))
+                              -0.5 * math.cos(r * 2 * math.pi / self.num_cams_radius)))
 
         bm.to_mesh(mesh)
         bm.free()
@@ -83,7 +84,8 @@ class LightfieldCylinder(LightfieldPropertyGroup):
 
         # Cylinder
         name = self.construct_names()['space']
-        bpy.ops.mesh.primitive_cylinder_add(end_fill_type='NOTHING', rotation=(math.pi / 2, 0, 0))
+        bpy.ops.mesh.primitive_cylinder_add(location=(0.0, 0.0, 0.0), end_fill_type='NOTHING',
+                                            rotation=(math.pi / 2, 0, 0))
         bpy.ops.object.shade_smooth()
         space = bpy.context.object
         space.name = name
@@ -118,7 +120,6 @@ class LightfieldCylinder(LightfieldPropertyGroup):
         bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
         c1.scale = [0.5] * 3
 
-
         # Delete all unused mesh data.
         for mesh in dumped_meshes:
             bpy.data.meshes.remove(mesh)
@@ -134,3 +135,17 @@ class LightfieldCylinder(LightfieldPropertyGroup):
                 'space': "{}_Space".format(base),
                 'front': "{}_Front".format(base),
                 'edges': "{}_Edges".format(base)}
+
+    def position_generator(self):
+        # TODO: implement cube-map render
+        for y in range(self.num_cams_y):
+            for r in range(self.num_cams_radius):
+                yield self.get_camera_pos(y, r)
+
+    def get_camera_pos(self, y, r):
+        base_y = 1 / (self.num_cams_y - 1)
+        return CameraPosition("view_{:04d}f".format(y * self.num_cams_radius + r),
+                              -0.5 * math.sin(r * 2 * math.pi / self.num_cams_radius),
+                              0.5 - y * base_y,
+                              -0.5 * math.cos(r * 2 * math.pi / self.num_cams_radius),
+                              theta=r * 2 * math.pi / self.num_cams_radius)
