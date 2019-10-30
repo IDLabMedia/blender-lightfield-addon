@@ -1,10 +1,8 @@
 import random
-import math
 import bpy
-import bmesh
 from .camera_position import CameraPosition
 
-from mathutils import Color
+from mathutils import Color, Vector, Matrix
 from .lightfield import LightfieldPropertyGroup
 
 
@@ -104,7 +102,22 @@ class LightfieldSphere(LightfieldPropertyGroup):
 
     def get_camera_pos(self, index):
         vertex = self.obj_grid.data.vertices[index]
-        euler = vertex.normal.to_track_quat('-Z', 'Y').to_euler()
+
+        normal = vertex.normal
+        z = Vector([0.0, 1.0, 0.0])
+        side = z.cross(normal)
+        if side.length > 0.0001:
+            up = side.cross(normal)
+
+            basis = Matrix.Identity(3)
+            basis.col[0] = -side
+            basis.col[1] = -up
+            basis.col[2] = -normal
+            # basis = basis.to_4x4()
+            euler = basis.to_euler()
+        else:
+            euler = vertex.normal.to_track_quat('-Z', 'Y').to_euler()
+            euler[2] = 0
 
         return CameraPosition("view_{:04d}f".format(index),
                               vertex.co[0],

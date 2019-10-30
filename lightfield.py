@@ -164,7 +164,7 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         update=update.update_preview
     )
     # Camera preview index
-    camera_preview_index = IntProperty(
+    camera_preview_index = FloatProperty(
         default=0,
         min=0,
         max=100,
