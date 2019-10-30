@@ -110,8 +110,8 @@ class LightfieldSphere(LightfieldPropertyGroup):
             up = side.cross(normal)
 
             basis = Matrix.Identity(3)
-            basis.col[0] = -side
-            basis.col[1] = up if self.face_inside else -up
+            basis.col[0] = side if self.face_inside else -side
+            basis.col[1] = -up
             basis.col[2] = normal if self.face_inside else -normal
             # basis = basis.to_4x4()
             euler = basis.to_euler()
