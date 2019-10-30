@@ -46,7 +46,7 @@ class LightfieldSphere(LightfieldPropertyGroup):
         # selected = bpy.context.selected_objects
 
         # Object data
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=self.num_cams_subdiv, radius=0.5)
+        bpy.ops.mesh.primitive_ico_sphere_add(location=(0.0, 0.0, 0.0), subdivisions=self.num_cams_subdiv, radius=0.5)
         grid = bpy.context.active_object
         bpy.ops.object.editmode_toggle()
 
@@ -68,7 +68,7 @@ class LightfieldSphere(LightfieldPropertyGroup):
         """
 
         name = self.construct_names()['space']
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=self.num_cams_subdiv, radius=0.5)
+        bpy.ops.mesh.primitive_ico_sphere_add(location=(0.0, 0.0, 0.0), subdivisions=self.num_cams_subdiv, radius=0.5)
         space = bpy.context.object
         bpy.ops.object.shade_smooth()
         space.name = name
@@ -104,12 +104,12 @@ class LightfieldSphere(LightfieldPropertyGroup):
 
     def get_camera_pos(self, index):
         vertex = self.obj_grid.data.vertices[index]
-        euler = vertex.normal.to_track_quat('Z', 'X').to_euler()
+        euler = vertex.normal.to_track_quat('-Z', 'Y').to_euler()
 
         return CameraPosition("view_{:04d}f".format(index),
                               vertex.co[0],
                               vertex.co[1],
                               vertex.co[2],
                               alpha=euler[0],
-                              theta=euler[1] + math.pi,
+                              theta=euler[1],
                               phi=euler[2])
