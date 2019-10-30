@@ -30,7 +30,7 @@ class DATA_PT_lightfield_setup(LightfieldButtonsPanel, Panel):
     bl_options = {'HIDE_HEADER'}
 
     def draw(self, context):
-        lf = utils.get_active_lightfield()
+        lf = utils.get_active_lightfield(context)
         if lf is None:
             return
 
@@ -44,19 +44,30 @@ class DATA_PT_lightfield_setup(LightfieldButtonsPanel, Panel):
         if lf.lf_type in ['CUBOID', 'PLANE']:
             col.prop(lf, "num_cams_x", text='Cameras X')
         # Needed for all types
-        col.prop(lf, "num_cams_y", text='Y')
+        if lf.lf_type != 'SPHERE':
+            col.prop(lf, "num_cams_y", text='Y')
         # Only needed for cuboid
         if lf.lf_type == 'CUBOID':
             col.prop(lf, "num_cams_z", text='Z')
-        if lf.lf_type in ['CYLINDER', 'SPHERE']:
+        elif lf.lf_type == 'CYLINDER':
             col.prop(lf, "num_cams_radius", text='Circumference')
+        elif lf.lf_type == 'SPHERE':
+            col.prop(lf, "num_cams_subdiv", text='Subdivisions')
+
+        layout.separator_spacer()
+
+        # if lf.lf_type not in ['CUBOID', 'PLANE']:
+        #     col = layout.column(align=True)
+        #     col.prop(lf, "size_x", text='Size X')
+        #     col.prop(lf, "size_y", text='Y')
+        #     col.prop(lf, "size_z", text='Z')
 
 
 class DATA_PT_lightfield_camera(LightfieldButtonsPanel, Panel):
     bl_label = 'Camera Settings'
 
     def draw(self, context):
-        lf = utils.get_active_lightfield()
+        lf = utils.get_active_lightfield(context)
         if lf is None:
             return
 
@@ -99,7 +110,7 @@ class DATA_PT_lightfield_dof(LightfieldButtonsPanel, Panel):
     COMPAT_ENGINES = {'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 
     def draw_header(self, context):
-        lf = utils.get_active_lightfield()
+        lf = utils.get_active_lightfield(context)
         if lf is None:
             return
 
@@ -108,7 +119,7 @@ class DATA_PT_lightfield_dof(LightfieldButtonsPanel, Panel):
         self.layout.prop(dof, "use_dof", text="")
 
     def draw(self, context):
-        lf = utils.get_active_lightfield()
+        lf = utils.get_active_lightfield(context)
         if lf is None:
             return
 
@@ -129,7 +140,7 @@ class DATA_PT_lightfield_dof_aperture(LightfieldButtonsPanel, Panel):
     COMPAT_ENGINES = {'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 
     def draw(self, context):
-        lf = utils.get_active_lightfield()
+        lf = utils.get_active_lightfield(context)
         if lf is None:
             return
 
@@ -193,7 +204,7 @@ class LIGHTFIELD_PT_list(Panel):
         items.template_list("LIGHTFIELD_UL_items", "", scn, "lightfield", scn, "lightfield_index", rows=3)
 
         buttons = items.row(align=True)
-        lf = utils.get_active_lightfield()
+        lf = utils.get_active_lightfield(context)
         if lf and lf.index != scn.lightfield_index:
             buttons.operator("lightfield.select", icon='RESTRICT_SELECT_OFF', text='')
         else:

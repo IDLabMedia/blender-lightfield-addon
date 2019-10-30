@@ -95,7 +95,7 @@ class LIGHTFIELD_OT_update(bpy.types.Operator):
     bl_options = {'REGISTER'}
 
     def execute(self, context):
-        lf = utils.get_active_lightfield()
+        lf = utils.get_active_lightfield(context)
         collection = utils.get_lightfield_collection()
 
         name = None
@@ -112,6 +112,8 @@ class LIGHTFIELD_OT_update(bpy.types.Operator):
         grid.parent = lf.obj_empty
         grid.hide_select = True
 
+        bpy.context.view_layer.objects.active = lf.obj_empty
+
         return {'FINISHED'}
 
 
@@ -126,13 +128,12 @@ class LIGHTFIELD_OT_update_preview(bpy.types.Operator):
         lf = (utils.get_lightfield_class(lf.lf_type))(lf)
 
         if lf.lf_type == 'PLANE':
-            if lf.camera_preview_index >= lf.num_cams_x * lf.num_cams_y:
-                lf.camera_preview_index = lf.num_cams_x * lf.num_cams_y - 1
-                return {'CANCELLED'}
-            elif lf.camera_preview_index < 0:
-                lf.camera_preview_index = 0
-                return {'CANCELLED'}
-            pos = lf.get_camera_pos(lf.camera_preview_index % lf.num_cams_x, lf.camera_preview_index // lf.num_cams_x)
+            # Percentage part in the x direction
+            y_percentage_steps = 100.0 / lf.num_cams_y
+            x_percentage = (lf.camera_preview_index % y_percentage_steps) / y_percentage_steps
+            y_percentage = lf.camera_preview_index
+            pos = lf.get_camera_pos(int(x_percentage * lf.num_cams_x),
+                                    int(y_percentage * lf.num_cams_y / 101))
         elif lf.lf_type == 'CUBOID':
             side_map = {'f': [lf.num_cams_x, lf.num_cams_y],
                         'b': [lf.num_cams_x, lf.num_cams_y],
@@ -140,51 +141,56 @@ class LIGHTFIELD_OT_update_preview(bpy.types.Operator):
                         'r': [lf.num_cams_z, lf.num_cams_y],
                         'u': [lf.num_cams_x, lf.num_cams_z],
                         'd': [lf.num_cams_x, lf.num_cams_z], }
-            if lf.camera_preview_index >= side_map[lf.camera_side][0] * side_map[lf.camera_side][1]:
-                lf.camera_preview_index = side_map[lf.camera_side][0] * side_map[lf.camera_side][1] - 1
-                return {'CANCELLED'}
-            elif lf.camera_preview_index < 0:
-                lf.camera_preview_index = 0
-                return {'CANCELLED'}
+            y_percentage_steps = 100.0 / lf.num_cams_y
+            x_percentage = (lf.camera_preview_index % y_percentage_steps) / y_percentage_steps
+            y_percentage = lf.camera_preview_index
             pos = lf.get_camera_pos(lf.camera_side,
-                                    lf.camera_preview_index % side_map[lf.camera_side][0],
-                                    lf.camera_preview_index // side_map[lf.camera_side][1])
+                                    int(x_percentage * side_map[lf.camera_side][0]),
+                                    int(y_percentage * side_map[lf.camera_side][1] / 101))
         elif lf.lf_type == 'CYLINDER':
-            if lf.camera_preview_index >= lf.num_cams_y * lf.num_cams_radius:
-                lf.camera_preview_index = lf.num_cams_y * lf.num_cams_radius - 1
-                return {'CANCELLED'}
-            elif lf.camera_preview_index < 0:
-                lf.camera_preview_index = 0
-                return {'CANCELLED'}
-            pos = lf.get_camera_pos(lf.camera_preview_index % lf.num_cams_y, lf.camera_preview_index // lf.num_cams_y)
+            y_percentage_steps = 100.0 / lf.num_cams_y
+            r_percentage = (lf.camera_preview_index % y_percentage_steps) / y_percentage_steps
+            y_percentage = lf.camera_preview_index
+            pos = lf.get_camera_pos(int(y_percentage * lf.num_cams_y / 101),
+                                    int(r_percentage * lf.num_cams_radius))
         elif lf.lf_type == 'SPHERE':
-            # TODO: implement sphere update preview
-            pos = None
-            pass
+            index = (lf.camera_preview_index / 100.0) * (len(lf.obj_grid.data.vertices) - 1)
+            pos = lf.get_camera_pos(int(index))
         else:
             raise KeyError()
 
-        ob = lf.obj_camera
-        ob.location = pos.location()
-        ob.rotation_euler = pos.rotation()
+        lf.obj_camera.location = pos.location()
+        lf.obj_camera.rotation_euler = pos.rotation()
 
         return {'FINISHED'}
 
 
 class LIGHTFIELD_OT_update_camera(bpy.types.Operator):
-    """Update the light field setup"""
+    """Update the light field setup camera"""
     bl_idname = "lightfield.update_camera"
     bl_label = """Update the light field camera"""
     bl_options = {'REGISTER'}
 
     def execute(self, context):
-        lf = utils.get_active_lightfield()
-        collection = utils.get_lightfield_collection()
+        lf = utils.get_active_lightfield(context)
         if lf.cube_camera:
             lf.dummy_focal_length = lf.data_camera.lens
             lf.data_camera.angle = math.pi / 2
         else:
             lf.data_camera.lens = lf.dummy_focal_length
+
+        return {'FINISHED'}
+
+
+class LIGHTFIELD_OT_update_size(bpy.types.Operator):
+    """Update the light field setup size"""
+    bl_idname = "lightfield.update_size"
+    bl_label = """Update the light field size"""
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        lf = utils.get_active_lightfield(context)
+        collection = utils.get_lightfield_collection()
 
         return {'FINISHED'}
 
@@ -200,7 +206,6 @@ class LIGHTFIELD_OT_render(bpy.types.Operator):
         lf = (utils.get_lightfield_class(lf.lf_type))(lf)
 
         lf.render()
-
         return {'FINISHED'}
 
 
@@ -218,7 +223,7 @@ class OBJECT_OT_lightfield_delete(bpy.types.Operator):
 
     def execute(self, context):
         if self.index == -1:
-            lf = utils.get_active_lightfield()
+            lf = utils.get_active_lightfield(context)
             if lf is None:
                 return
         else:

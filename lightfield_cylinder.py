@@ -16,10 +16,12 @@ class LightfieldCylinder(LightfieldPropertyGroup):
         self.obj_empty.empty_display_type = 'CIRCLE'
 
         # Update lightfield references
-        self.obj_grid = visuals[0]
-        self.obj_space = visuals[1]
-        self.obj_front = visuals[2]
-        self.obj_edges = visuals[3]
+        self.obj_visuals.add().obj_visual = visuals[0]
+        self.obj_visuals.add().obj_visual = visuals[1]
+        self.obj_visuals.add().obj_visual = visuals[2]
+        self.obj_visuals.add().obj_visual = visuals[3]
+
+        self.obj_grid = visuals[1]
 
     def construct_visuals(self, collection):
         grid = self.create_grid()
@@ -32,7 +34,7 @@ class LightfieldCylinder(LightfieldPropertyGroup):
         collection.objects.link(front)
         collection.objects.link(edges)
 
-        return [grid, space, front, edges]
+        return [space, grid, front, edges]
 
     def create_grid(self):
         """
@@ -112,6 +114,7 @@ class LightfieldCylinder(LightfieldPropertyGroup):
         bpy.ops.mesh.primitive_circle_add(location=(0.0, -1.0, 0.0), rotation=(math.pi / 2, 0.0, 0.0))
         c1 = bpy.context.object
         c1.name = self.construct_names()['edges']
+        c1.data.name = c1.name
         c2.select_set(True)
 
         dumped_meshes.append(c2.data)
@@ -119,6 +122,7 @@ class LightfieldCylinder(LightfieldPropertyGroup):
         bpy.ops.object.join()
         bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
         c1.scale = [0.5] * 3
+        c1.users_collection[0].objects.unlink(c1)
 
         # Delete all unused mesh data.
         for mesh in dumped_meshes:

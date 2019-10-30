@@ -2,11 +2,12 @@ import bpy
 from .lightfield_plane import LightfieldPlane
 from .lightfield_cuboid import LightfieldCuboid
 from .lightfield_cylinder import LightfieldCylinder
+from .lightfield_sphere import LightfieldSphere
 
 
 # from .lightfield_sphere import LightfieldSphere
 
-def get_active_lightfield():
+def get_active_lightfield(context):
     """
     Get the active lightfield object, or None if not active
     :return: lightfield/None
@@ -24,7 +25,7 @@ def get_active_lightfield():
             elif lightfield.lf_type == 'CYLINDER':
                 lf = (LightfieldCylinder)(lightfield)
             elif lightfield.lf_type == 'SPHERE':
-                lf = (LightfieldCylinder)(lightfield)
+                lf = (LightfieldSphere)(lightfield)
             else:
                 return None
             return lf
@@ -39,8 +40,7 @@ def get_lightfield_class(enum_name):
     elif enum_name == 'CYLINDER':
         return LightfieldCylinder
     elif enum_name == 'SPHERE':
-        # TODO: cast to sphere
-        return LightfieldCylinder
+        return LightfieldSphere
     else:
         raise LookupError()
 

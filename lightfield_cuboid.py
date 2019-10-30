@@ -16,9 +16,11 @@ class LightfieldCuboid(LightfieldPropertyGroup):
         self.obj_empty.empty_display_type = 'CUBE'
 
         # Update lightfield references
+        self.obj_visuals.add().obj_visual = visuals[0]
+        self.obj_visuals.add().obj_visual = visuals[1]
+        self.obj_visuals.add().obj_visual = visuals[2]
+
         self.obj_grid = visuals[0]
-        self.obj_space = visuals[1]
-        self.obj_front = visuals[2]
 
     def construct_visuals(self, collection):
         grid = self.create_grid()
@@ -161,25 +163,25 @@ class LightfieldCuboid(LightfieldPropertyGroup):
                                   -0.5,
                                   0.5 - y * base_y,
                                   0.5 - x * base_z,
-                                  theta=math.pi/2)
+                                  theta=math.pi / 2)
 
         elif side == 'r':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_z + x),
                                   0.5,
                                   0.5 - y * base_y,
                                   -0.5 + x * base_z,
-                                  theta=-math.pi/2)
+                                  theta=-math.pi / 2)
 
         elif side == 'u':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
                                   -0.5 + x * base_x,
                                   0.5,
                                   0.5 - y * base_z,
-                                  alpha=math.pi/2)
+                                  alpha=math.pi / 2)
 
         elif side == 'd':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
                                   -0.5 + x * base_x,
                                   -0.5,
                                   -0.5 + y * base_z,
-                                  alpha=-math.pi/2)
+                                  alpha=-math.pi / 2)

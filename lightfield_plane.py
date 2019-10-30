@@ -16,9 +16,11 @@ class LightfieldPlane(LightfieldPropertyGroup):
         self.obj_empty.empty_display_type = 'PLAIN_AXES'
 
         # Update lightfield references
+        self.obj_visuals.add().obj_visual = visuals[0]
+        self.obj_visuals.add().obj_visual = visuals[1]
+        self.obj_visuals.add().obj_visual = visuals[2]
+
         self.obj_grid = visuals[0]
-        self.obj_space = visuals[1]
-        self.obj_front = visuals[2]
 
     def construct_visuals(self, collection):
         grid = self.create_grid()

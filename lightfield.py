@@ -2,8 +2,13 @@ import math
 import os
 
 import bpy
-from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty, PointerProperty, EnumProperty
+from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty, PointerProperty, EnumProperty, \
+    CollectionProperty
 from . import update, file_utils
+
+
+class LightfieldVisual(bpy.types.PropertyGroup):
+    obj_visual = PointerProperty(type=bpy.types.Object)
 
 
 class LightfieldPropertyGroup(bpy.types.PropertyGroup):
@@ -18,15 +23,11 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
     # -------------------------------------------------------------------
 
     # Pointer to the empty
-    obj_empty = PointerProperty(type=bpy.types.Object)
+    obj_visuals = CollectionProperty(type=LightfieldVisual)
     obj_grid = PointerProperty(type=bpy.types.Object)
-    obj_space = PointerProperty(type=bpy.types.Object)
+    obj_empty = PointerProperty(type=bpy.types.Object)
     obj_camera = PointerProperty(type=bpy.types.Object)
-    obj_front = PointerProperty(type=bpy.types.Object)
     data_camera = PointerProperty(type=bpy.types.Camera)
-
-    # Cylinder specific:
-    obj_edges = PointerProperty(type=bpy.types.Object)
 
     # -------------------------------------------------------------------
     #   Lightfield properties
@@ -69,6 +70,37 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
                                   description='Number of cameras on the circumference',
                                   update=update.update_num_cameras
                                   )
+
+    num_cams_subdiv = IntProperty(default=3,
+                                  min=2,
+                                  max=6,
+                                  description='Number of cameras on the icosphere',
+                                  update=update.update_num_cameras
+                                  )
+    # Size of setup in X direction
+    size_x = FloatProperty(
+        default=1.0,
+        min=0.0,
+        unit='LENGTH',
+        description='Size in X direction',
+        # update=update.update_size
+    )
+    # Size of setup in Y direction
+    size_y = FloatProperty(
+        default=1.0,
+        min=0.0,
+        unit='LENGTH',
+        description='Size in Y direction',
+        # update=update.update_size
+    )
+    # Size of setup in Z direction
+    size_z = FloatProperty(
+        default=1.0,
+        min=0.0,
+        unit='LENGTH',
+        description='Size in Z direction',
+        # update=update.update_size
+    )
 
     # -------------------------------------------------------------------
     #   Camera Properties
@@ -135,6 +167,8 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
     camera_preview_index = IntProperty(
         default=0,
         min=0,
+        max=100,
+        subtype='PERCENTAGE',
         update=update.update_preview
     )
 
@@ -192,6 +226,7 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
 
         # Create new Empty object.
         lightfield = bpy.data.objects.new(names['lightfield'], object_data=None)
+        print(lightfield.name)
         lightfield.empty_display_size = 0.2
         lightfield.rotation_euler[0] = math.pi / 2
 
@@ -208,11 +243,15 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
             obj.hide_select = True
         collection.objects.link(lightfield)
 
-        # set the active object to LF container
+        # Set active object
         bpy.ops.object.select_all(action='DESELECT')
         lightfield.select_set(True)
-        lightfield.location = bpy.context.scene.cursor.location
         bpy.context.view_layer.objects.active = lightfield
+
+        # Put the lightfield at the location of the cursor
+        lightfield.location = bpy.context.scene.cursor.location
+
+        # In case of Cylinder and sphere, limit rotation
 
         # Update lightfield references
         self.obj_empty = lightfield
@@ -251,10 +290,42 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
 
         # Create camera object to hold camera data.
         obj = bpy.data.objects.new(name=name, object_data=camera)
+
         # Link to scene
         collection.objects.link(obj)
 
         return obj, camera
+
+    def recreate_camera(self, collection):
+        """
+        Recreate the camera after a scale is applied.
+
+        :param collection:
+        :return:
+        """
+        # Delete old camera object
+        bpy.data.objects.remove(self.obj_camera)
+
+        # Create new camera object
+        obj = bpy.data.objects.new(name=self.data_camera.name, object_data=self.data_camera)
+
+        # Link to scene
+        collection.objects.link(obj)
+
+        # Re-parent
+        obj.parent = self.obj_empty
+
+        # Update preview
+        bpy.ops.lightfield.update_preview('EXEC_DEFAULT')
+
+    def create_camera_grid(self, collection):
+        """
+        Create a mesh for which the vertex coordinates and normals indicate camera positions.
+
+        :param collection: Collection to put the grid in
+        :return: grid
+        """
+        raise NotImplementedError()
 
     def create_front(self):
         front_empty = bpy.data.objects.new(
@@ -264,6 +335,10 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         front_empty.empty_display_size = 1.5
 
         return front_empty
+
+    def rescale_object(self, obj):
+        obj.scale = [self.size_x, self.size_y, self.size_z]
+        bpy.ops.object.transform_apply({'selected_objects': obj}, location=False, rotation=False, scale=True)
 
     def set_render_properties(self):
         """
@@ -290,9 +365,6 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         old_res_y = scene.render.resolution_y
         old_camera = bpy.context.scene.camera
 
-        old_loc = self.obj_camera.location[0:3]
-        old_rot = self.obj_camera.rotation_euler[0:3]
-
         rb = scene.render
         old_percentage = rb.resolution_percentage
         old_render_borders = [rb.border_min_x, rb.border_max_x, rb.border_min_y, rb.border_max_y]
@@ -304,7 +376,7 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         # Set some properties beforehand:
         self.set_render_properties()
 
-        # TODO: Store configurations
+        bpy.ops.lightfield.export_config()
         # Render frames if sequence, only 1 frame if still.
         if self.sequence_start == self.sequence_end:
             bpy.context.scene.frame_current = self.sequence_end
@@ -320,9 +392,6 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         scene.render.resolution_x = old_res_x
         scene.render.resolution_y = old_res_y
         bpy.context.scene.camera = old_camera
-
-        self.obj_camera.location = old_loc
-        self.obj_camera.rotation_euler = old_rot
 
         rb.resolution_percentage = old_percentage
         rb.border_min_x, rb.border_max_x, rb.border_min_y, rb.border_max_y = old_render_borders
@@ -347,6 +416,9 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         # TODO: setup all parameters
         self.obj_camera.location = cam_pos.location()
         self.obj_camera.rotation_euler = cam_pos.rotation()
+
+        bpy.ops.lightfield.export_config_append(filename=cam_pos.name)
+
         bpy.context.scene.render.filepath = os.path.join(output_directory, cam_pos.name)
         bpy.ops.render.render(write_still=True)
 
