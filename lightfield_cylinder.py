@@ -152,4 +152,4 @@ class LightfieldCylinder(LightfieldPropertyGroup):
                               -0.5 * math.sin(r * 2 * math.pi / self.num_cams_radius),
                               0.5 - y * base_y,
                               -0.5 * math.cos(r * 2 * math.pi / self.num_cams_radius),
-                              theta=r * 2 * math.pi / self.num_cams_radius)
+                              theta=r * 2 * math.pi / self.num_cams_radius + (math.pi if self.face_inside else 0))

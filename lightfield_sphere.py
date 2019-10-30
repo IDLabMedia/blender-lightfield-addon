@@ -111,12 +111,15 @@ class LightfieldSphere(LightfieldPropertyGroup):
 
             basis = Matrix.Identity(3)
             basis.col[0] = -side
-            basis.col[1] = -up
-            basis.col[2] = -normal
+            basis.col[1] = up if self.face_inside else -up
+            basis.col[2] = normal if self.face_inside else -normal
             # basis = basis.to_4x4()
             euler = basis.to_euler()
         else:
-            euler = vertex.normal.to_track_quat('-Z', 'Y').to_euler()
+            if self.face_inside:
+                euler = vertex.normal.to_track_quat('Z', 'Y').to_euler()
+            else:
+                euler = vertex.normal.to_track_quat('-Z', 'Y').to_euler()
             euler[2] = 0
 
         return CameraPosition("view_{:04d}f".format(index),

@@ -113,6 +113,13 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         update=update.update_cube_camera
     )
 
+    # Let the camera face the inside of the volume
+    face_inside = BoolProperty(
+        default=False,
+        description="Make the cameras face inside.\nObjects are further away but are visible from more angles",
+        update=update.update_preview
+    )
+
     # Dummies for keeping settings intact
     dummy_focal_length = FloatProperty()
 

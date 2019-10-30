@@ -79,6 +79,7 @@ class DATA_PT_lightfield_camera(LightfieldButtonsPanel, Panel):
         # Render as cube camera
         col = layout.column(align=True)
         col.prop(lf, "cube_camera", text="Cube Camera")
+        col.prop(lf, "face_inside", text="Face Inside")
 
         # FOV
         col = layout.column()
