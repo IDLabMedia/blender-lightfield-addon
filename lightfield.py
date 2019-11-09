@@ -379,9 +379,11 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         old_crop_to_region = rb.use_crop_to_border
 
         old_output = rb.filepath
+        old_file_extension = rb.use_file_extension
 
         # Set some properties beforehand:
         self.set_render_properties()
+        rb.use_file_extension = False
 
         bpy.ops.lightfield.export_config()
         # Render frames if sequence, only 1 frame if still.
@@ -406,6 +408,7 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         rb.use_crop_to_border = old_crop_to_region
 
         rb.filepath = old_output
+        rb.use_file_extension = old_file_extension
 
     def render_time_frame(self, output_directory):
         """
