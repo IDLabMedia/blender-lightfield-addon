@@ -116,11 +116,11 @@ class LightfieldSphere(LightfieldPropertyGroup):
             # basis = basis.to_4x4()
             euler = basis.to_euler()
         else:
+            euler = vertex.normal.to_track_quat('Z', 'Y').to_euler()
             if self.face_inside:
-                euler = vertex.normal.to_track_quat('Z', 'Y').to_euler()
-            else:
-                euler = vertex.normal.to_track_quat('-Z', 'Y').to_euler()
-            euler[2] = 0
+                for i in range(2,3):
+                    euler[i] *= -1
+            #euler[2] = 0
 
         return CameraPosition("view_{:04d}f".format(index),
                               vertex.co[0],
