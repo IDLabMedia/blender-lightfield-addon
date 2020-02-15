@@ -3,6 +3,7 @@ import bpy
 from . import utils
 
 
+# Whether to display data-panel or not.
 class LightfieldButtonsPanel:
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -35,7 +36,7 @@ class DATA_PT_lightfield_setup(LightfieldButtonsPanel, Panel):
             return
 
         layout = self.layout
-        layout.label(text="Lightfield of type: {}".format(lf.lf_type.capitalize()))
+        layout.label(text="Lightfield type: {}".format(lf.lf_type.capitalize()))
         layout.use_property_split = True
         layout.use_property_decorate = False
         # Number of cameras
@@ -167,6 +168,7 @@ class DATA_PT_lightfield_dof_aperture(LightfieldButtonsPanel, Panel):
 #   Settings tab in 3D view
 # -------------------------------------------------------------------
 
+# Responsible for items in lightfield list
 class LIGHTFIELD_UL_items(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_property, index, flt_flag):
         if item.lf_type == 'PLANE':
@@ -185,6 +187,7 @@ class LIGHTFIELD_UL_items(UIList):
         print('invoke')
 
 
+# List with all lightfields
 class LIGHTFIELD_PT_list(Panel):
     bl_label = "Lightfields"
     bl_space_type = "VIEW_3D"
@@ -230,6 +233,7 @@ class LIGHTFIELD_PT_list(Panel):
         layout.separator()
 
 
+# Render-settings per lightfield
 class LIGHTFIELD_PT_rendering(Panel):
     bl_label = 'Rendering'
     bl_space_type = "VIEW_3D"
@@ -257,7 +261,11 @@ class LIGHTFIELD_PT_rendering(Panel):
         col.prop(lf, "sequence_end", text="End")
         col.prop(lf, "sequence_steps", text="Step")
 
+        col = layout.column(align=True)
+        col.prop(lf, "output_depth", text="Depth (OpenEXR)")
 
+
+# Preview settings per lightfield
 class LIGHTFIELD_PT_preview(Panel):
     bl_label = 'Preview'
     bl_space_type = "VIEW_3D"
@@ -285,6 +293,7 @@ class LIGHTFIELD_PT_preview(Panel):
         col.prop(lf, "camera_preview_index", text="Grid index")
 
 
+# Output settings per lightfield
 class LIGHTFIELD_PT_output(Panel):
     bl_label = 'Output'
     bl_space_type = "VIEW_3D"
@@ -308,6 +317,7 @@ class LIGHTFIELD_PT_output(Panel):
         # TODO: add settings like RGB, image format, color depth and compression (see render tab)
 
 
+# Persistence settings per lightfield
 class LIGHTFIELD_PT_persistence(Panel):
     bl_label = 'Persistence'
     bl_space_type = "VIEW_3D"
@@ -334,7 +344,7 @@ class LIGHTFIELD_PT_persistence(Panel):
         # row.operator("scene.load_lightfield", text="Load", icon="EXPORT")
         # row.operator("scene.save_lightfield", text="Save", icon="IMPORT")
 
-
+# Not used
 class LIGHTFIELD_PT_settings(Panel):
     bl_label = "Lightfield"
     bl_idname = "LIGHTFIELD_PT_settings"

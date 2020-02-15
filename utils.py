@@ -33,6 +33,7 @@ def get_active_lightfield(context):
 
 
 def get_lightfield_class(enum_name):
+    """Return the lightfield class of the corresponding name."""
     if enum_name == 'PLANE':
         return LightfieldPlane
     elif enum_name == 'CUBOID':
@@ -46,6 +47,7 @@ def get_lightfield_class(enum_name):
 
 
 def get_lightfield_collection():
+    """Return the collection containing the lightfields."""
     LIGHTFIELD_COLLECTION = 'Lightfields'
     if LIGHTFIELD_COLLECTION in bpy.data.collections:
         collection = bpy.data.collections[LIGHTFIELD_COLLECTION]

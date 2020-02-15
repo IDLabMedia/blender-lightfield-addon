@@ -1,4 +1,5 @@
 class CameraPosition:
+    """Camera position class for ease of use with borders and ordering."""
 
     def __init__(self, name, x, y, z,
                  alpha=0,

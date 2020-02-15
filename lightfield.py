@@ -63,14 +63,14 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
                              description='Number of cameras in Z direction',
                              update=update.update_num_cameras
                              )
-    # Only for sphere and cylinder
+    # Only for cylinder
     num_cams_radius = IntProperty(default=3,
                                   min=3,
                                   max=2000,
                                   description='Number of cameras on the circumference',
                                   update=update.update_num_cameras
                                   )
-
+    # Only for sphere
     num_cams_subdiv = IntProperty(default=3,
                                   min=2,
                                   max=6,
@@ -136,6 +136,13 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         min=1,
         max=16384,
         description='Resolution Y',
+    )
+
+    # Whether or not to output depth of the scene (as added data).
+    # This is exported to the EXR format instead of PNG.
+    output_depth = BoolProperty(
+        name="Depth (OpenEXR)",
+        description="Output renders to EXR with depth map included",
     )
 
     # -------------------------------------------------------------------
@@ -233,7 +240,6 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
 
         # Create new Empty object.
         lightfield = bpy.data.objects.new(names['lightfield'], object_data=None)
-        print(lightfield.name)
         lightfield.empty_display_size = 0.2
         lightfield.rotation_euler[0] = math.pi / 2
 
@@ -358,6 +364,9 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         scene.render.resolution_y = self.res_y
         scene.render.resolution_percentage = 100
         scene.camera = self.obj_camera
+        if self.output_depth:
+            scene.render.image_settings.file_format = "OPEN_EXR"
+            scene.render.image_settings.use_zbuffer = True
 
     def render(self):
         """
@@ -366,19 +375,22 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         :return:
         """
         scene = bpy.context.scene
+        rb = scene.render
 
         # Store now to reset later.
-        old_res_x = scene.render.resolution_x
-        old_res_y = scene.render.resolution_y
-        old_camera = bpy.context.scene.camera
+        old_res_x = rb.resolution_x
+        old_res_y = rb.resolution_y
+        old_camera = scene.camera
 
-        rb = scene.render
         old_percentage = rb.resolution_percentage
         old_render_borders = [rb.border_min_x, rb.border_max_x, rb.border_min_y, rb.border_max_y]
         old_render_region = rb.use_border
         old_crop_to_region = rb.use_crop_to_border
 
         old_output = rb.filepath
+
+        old_file_format = rb.image_settings.file_format
+        old_use_zbuffer = rb.image_settings.use_zbuffer
 
         # Set some properties beforehand:
         self.set_render_properties()
@@ -406,6 +418,9 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         rb.use_crop_to_border = old_crop_to_region
 
         rb.filepath = old_output
+
+        rb.image_settings.file_format = old_file_format
+        rb.image_settings.use_zbuffer = old_use_zbuffer
 
     def render_time_frame(self, output_directory):
         """

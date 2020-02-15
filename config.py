@@ -5,6 +5,7 @@ import os
 from . import utils, file_utils
 
 
+# Export configuration of current setup for later use.
 class EXPORT_OT_lightfield_config(bpy.types.Operator):
     bl_idname = "lightfield.export_config"
     bl_label = """Export lightfield configuration"""
@@ -15,7 +16,6 @@ class EXPORT_OT_lightfield_config(bpy.types.Operator):
         lf = (utils.get_lightfield_class(lf.lf_type))(lf)
 
         with open(bpy.path.abspath(lf.path_config_file), mode='w', newline='') as csv_file:
-            # TODO: write projection-matrix
             writer = csv.writer(csv_file, delimiter=',')
 
             projection_matrix = lf.obj_camera.calc_matrix_camera(
@@ -34,6 +34,7 @@ class EXPORT_OT_lightfield_config(bpy.types.Operator):
         return {'FINISHED'}
 
 
+# Export part of a configuration to be appended, for later use.
 class EXPORT_OT_lightfield_config_append(bpy.types.Operator):
     bl_idname = "lightfield.export_config_append"
     bl_label = """Append a camera position to the lightfield configuration"""
@@ -54,3 +55,5 @@ class EXPORT_OT_lightfield_config_append(bpy.types.Operator):
         csv_file.close()
 
         return {'FINISHED'}
+
+# TODO: Import configuration could be useful.

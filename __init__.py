@@ -12,6 +12,7 @@ bl_info = {
     'category': "Render"
 }
 
+# Importing in this init file is a bit weird.
 if "bpy" in locals():
     print("Force reloading the plugin.")
     import importlib
@@ -56,7 +57,7 @@ def make_annotations(cls):
             delattr(cls, k)
     return cls
 
-
+# All classes to register.
 classes = (
     lightfield.LightfieldVisual,
     lightfield.LightfieldPropertyGroup,
@@ -89,7 +90,7 @@ classes = (
     config.EXPORT_OT_lightfield_config_append,
 )
 
-
+# Handler for keeping lightfield list in sync with active selection.
 @bpy.app.handlers.persistent
 def load_handler(temp):
     active_object = bpy.types.LayerObjects, "active"
@@ -99,7 +100,7 @@ def load_handler(temp):
                              args=(),
                              notify=update.update_lightfield_index)
 
-
+# Needed for updating the size correctly (no recursion).
 @bpy.app.handlers.persistent
 def update_depsgraph(scene):
     # Get the dependency graph.
@@ -114,11 +115,6 @@ def update_depsgraph(scene):
             bpy.app.handlers.depsgraph_update_post.remove(update_depsgraph)
             update.update_size()
             bpy.app.handlers.depsgraph_update_post.append(update_depsgraph)
-
-
-# print("Camera Data Changed:", depsgraph.id_type_updated('OBJECT'))
-# print("Updated IDs:", [update.id for update in depsgraph.updates])
-
 
 # Register all classes + the collection property for storing lightfields
 def register():
