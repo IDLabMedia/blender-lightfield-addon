@@ -25,6 +25,7 @@ class EXPORT_OT_lightfield_config(bpy.types.Operator):
                 scale_x=context.scene.render.pixel_aspect_x,
                 scale_y=context.scene.render.pixel_aspect_y)
             writer.writerow([lf.lf_type])
+            writer.writerow([lf.res_x, lf.res_y])
             for i in range(0, 4):
                 writer.writerow([projection_matrix[i][0],
                                  projection_matrix[i][1],
