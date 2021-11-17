@@ -67,6 +67,17 @@ class LIGHTFIELD_OT_move(bpy.types.Operator):
                 scn.lightfield_index -= 1
         return {"FINISHED"}
 
+class LIGHTFIELD_OT_make_camera_active(bpy.types.Operator):
+    """Make the camera of the selected light field the active one for the scene"""
+    bl_idname = "lightfield.make_camera_active"
+    bl_label = "Make Light Field camera active for scene"
+    bl_description = "Make the camera of the selected light field active the active one for the scene"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def invoke(self, context, event):
+        lf = utils.get_active_lightfield(context)
+        context.scene.camera = lf.obj_camera
+        return {"FINISHED"}
 
 class LIGHTFIELD_OT_select(bpy.types.Operator):
     """Select the current lightfield in the viewport"""

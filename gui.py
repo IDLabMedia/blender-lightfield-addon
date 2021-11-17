@@ -1,6 +1,7 @@
 from bpy.types import Panel, UIList, Menu
 import bpy
 from . import utils
+import os
 
 
 # Whether to display data-panel or not.
@@ -251,11 +252,6 @@ class LIGHTFIELD_PT_rendering(Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        # Resolution
-        col = layout.column(align=True)
-        col.prop(lf, "res_x", text='Resolution X')
-        col.prop(lf, "res_y", text='Y')
-
         col = layout.column(align=True)
         col.prop(lf, "sequence_start", text="Frame Start")
         col.prop(lf, "sequence_end", text="End")
@@ -292,6 +288,21 @@ class LIGHTFIELD_PT_preview(Panel):
         col = layout.column(align=True)
         col.prop(lf, "camera_preview_index", text="Grid index")
 
+        layout.operator("lightfield.make_camera_active",
+                icon='OUTLINER_DATA_CAMERA',
+                text='Make LF camera the active scene camera')
+
+
+import textwrap
+def _label_multiline(context, text, parent):
+    chars = int(context.region.width / 7)   # 7 pix on 1 character
+    wrapper = textwrap.TextWrapper(width=chars)
+    text_lines = wrapper.wrap(text=text)
+    for i, text_line in enumerate(text_lines):
+        if i == 0:
+            parent.label(text=text_line, icon='FILE_FOLDER')
+        else:
+            parent.label(text="  " + text_line)
 
 # Output settings per lightfield
 class LIGHTFIELD_PT_output(Panel):
@@ -300,6 +311,7 @@ class LIGHTFIELD_PT_output(Panel):
     bl_region_type = "UI"
     bl_category = 'Lightfield'
     bl_context = "objectmode"
+
 
     def draw(self, context):
         if context.scene.lightfield_index == -1:
@@ -312,7 +324,27 @@ class LIGHTFIELD_PT_output(Panel):
         layout.use_property_decorate = False
 
         col = layout.column(align=True)
+        col.label(text="Base folder:")
         col.prop(lf, "output_directory")
+
+        col = col.column(align=True)
+        col.scale_y = 0.8
+        col.separator(factor=1.6)
+        col.label(text=" --- Review --- ")
+        col.separator(factor=1.6)
+        col.label(text="Absolute path to base folder:")
+        col.label(text=lf.get_output_directory(), icon='FILE_FOLDER')
+        col.separator(factor=1.6)
+        col.label(text="Absolute path to config file:")
+        col.label(text=lf.get_path_config_file(), icon='FILE_BLANK')
+        col.separator(factor=1.6)
+        col.label(text="Absolute path to image folder:")
+        col.label(text=lf.get_output_image_directory(), icon='RENDERLAYERS')
+        col.separator(factor=1.6)
+        col.label(text="Absolute path to first image:")
+        first_image_name = next(lf.position_generator()).name + lf.get_extension()
+        col.label(text=os.path.join(lf.get_output_image_directory(), first_image_name), icon='FILE_IMAGE')
+        #_label_multiline(context=context, text=lf.get_output_directory(), parent=col)
 
         # TODO: add settings like RGB, image format, color depth and compression (see render tab)
 

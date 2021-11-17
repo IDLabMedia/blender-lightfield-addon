@@ -123,20 +123,6 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
     # Dummies for keeping settings intact
     dummy_focal_length = FloatProperty()
 
-    # Resolution in the X direction
-    res_x = IntProperty(
-        default=512,
-        min=1,
-        max=16384,
-        description='Resolution X',
-    )
-    # Resolution in the Y direction
-    res_y = IntProperty(
-        default=512,
-        min=1,
-        max=16384,
-        description='Resolution Y',
-    )
 
     # Whether or not to output depth of the scene (as added data).
     # This is exported to the EXR format instead of PNG.
@@ -273,6 +259,32 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
 
         return visuals
 
+    def get_output_directory(self, frame_number=None):
+        if frame_number is None:
+            frame_number = self.sequence_start
+        directory = os.path.join(os.path.abspath(bpy.path.abspath(self.output_directory)), self.obj_empty.name)
+
+        if self.sequence_start != self.sequence_end:
+            directory = os.path.join(directory, "f{:05}".format(frame_number))
+        return directory + "/"
+
+    def get_path_config_file(self):
+        return os.path.join(self.get_output_directory(), "lightfield.cfg")
+
+    def get_output_image_directory(self):
+        subdir = "img"
+        if self.output_depth:
+            subdir = "exr"
+        else:
+            subdir = "png"
+        return os.path.join(self.get_output_directory(), subdir) + "/"
+
+    def get_extension(self):
+        if self.output_depth:
+            return ".exr"
+        else:
+            return ".png"
+
     def construct_visuals(self, collection):
         """
         Create the different visuals for the lightfield.
@@ -360,13 +372,15 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         :return: Nothing.
         """
         scene = bpy.context.scene
-        scene.render.resolution_x = self.res_x
-        scene.render.resolution_y = self.res_y
         scene.render.resolution_percentage = 100
         scene.camera = self.obj_camera
         if self.output_depth:
             scene.render.image_settings.file_format = "OPEN_EXR"
             scene.render.image_settings.use_zbuffer = True
+        else:
+            scene.render.image_settings.file_format = "PNG"
+            scene.render.image_settings.use_zbuffer = False
+
 
     def render(self):
         """
@@ -378,8 +392,6 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         rb = scene.render
 
         # Store now to reset later.
-        old_res_x = rb.resolution_x
-        old_res_y = rb.resolution_y
         old_camera = scene.camera
 
         old_percentage = rb.resolution_percentage
@@ -396,22 +408,21 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         # Set some properties beforehand:
         self.set_render_properties()
         rb.use_file_extension = False
+        extension = self.get_extension()
 
         bpy.ops.lightfield.export_config()
         # Render frames if sequence, only 1 frame if still.
         if self.sequence_start == self.sequence_end:
+            output_directory = self.get_output_directory()
             bpy.context.scene.frame_current = self.sequence_end
-            self.render_time_frame(self.output_directory)
+            self.render_time_frame(output_directory, extension)
         else:
             for i in range(self.sequence_start, self.sequence_end, self.sequence_steps):
                 bpy.context.scene.frame_current = i
-                output_directory = os.path.join(bpy.path.abspath(
-                    self.output_directory), "sequence", "{:06d}".format(i))
-                self.render_time_frame(output_directory)
+                output_directory = self.get_output_directory(frame=i)
+                self.render_time_frame(output_directory, extension)
 
         # Reset parameters
-        scene.render.resolution_x = old_res_x
-        scene.render.resolution_y = old_res_y
         bpy.context.scene.camera = old_camera
 
         rb.resolution_percentage = old_percentage
@@ -425,7 +436,7 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         rb.image_settings.file_format = old_file_format
         rb.image_settings.use_zbuffer = old_use_zbuffer
 
-    def render_time_frame(self, output_directory):
+    def render_time_frame(self, output_directory, extension):
         """
         Render a single frame and put the result in output directory.
 
@@ -433,18 +444,21 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         :return: Nothing.
         """
 
+        os.makedirs(output_directory, exist_ok=True)
+
         # Render all views for a time-frame.
         for pos in self.position_generator():
-            self.render_view(pos, output_directory)
+            self.render_view(pos, output_directory, extension)
 
-    def render_view(self, cam_pos, output_directory):
+    def render_view(self, cam_pos, output_directory, extension):
         # TODO: setup all parameters
         self.obj_camera.location = cam_pos.location()
         self.obj_camera.rotation_euler = cam_pos.rotation()
 
         bpy.ops.lightfield.export_config_append(filename=cam_pos.name)
 
-        bpy.context.scene.render.filepath = os.path.join(output_directory, cam_pos.name)
+        filename = cam_pos.name + extension
+        bpy.context.scene.render.filepath = os.path.join(output_directory, filename)
         bpy.ops.render.render(write_still=True)
 
     def position_generator(self):
