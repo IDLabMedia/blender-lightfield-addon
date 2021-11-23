@@ -152,11 +152,12 @@ class LIGHTFIELD_OT_update_preview(bpy.types.Operator):
 
         if lf.lf_type == 'PLANE':
             # Percentage part in the x direction
-            y_percentage_steps = 100.0 / lf.num_cams_y
-            x_percentage = (lf.camera_preview_index % y_percentage_steps) / y_percentage_steps
-            y_percentage = lf.camera_preview_index
-            pos = lf.get_camera_pos(int(x_percentage * lf.num_cams_x),
-                                    int(y_percentage * lf.num_cams_y / 101))
+            sides = [lf.num_cams_x, lf.num_cams_y]
+            num_cameras = sides[0] * sides[1]
+            cam_idx = int(lf.camera_preview_index * 0.01 * (num_cameras - 1))
+            cam_idx_x = cam_idx % sides[0]
+            cam_idx_y = cam_idx // sides[0]
+            pos = lf.get_camera_pos(cam_idx_x, cam_idx_y)
         elif lf.lf_type == 'CUBOID':
             side_map = {'f': [lf.num_cams_x, lf.num_cams_y],
                         'b': [lf.num_cams_x, lf.num_cams_y],
@@ -164,21 +165,23 @@ class LIGHTFIELD_OT_update_preview(bpy.types.Operator):
                         'r': [lf.num_cams_z, lf.num_cams_y],
                         'u': [lf.num_cams_x, lf.num_cams_z],
                         'd': [lf.num_cams_x, lf.num_cams_z], }
-            y_percentage_steps = 100.0 / lf.num_cams_y
-            x_percentage = (lf.camera_preview_index % y_percentage_steps) / y_percentage_steps
-            y_percentage = lf.camera_preview_index
-            pos = lf.get_camera_pos(lf.camera_side,
-                                    int(x_percentage * side_map[lf.camera_side][0]),
-                                    int(y_percentage * side_map[lf.camera_side][1] / 101))
+            sides = side_map[lf.camera_side]
+            num_cameras = sides[0] * sides[1]
+            cam_idx = int(lf.camera_preview_index * 0.01 * (num_cameras - 1))
+            cam_idx_x = cam_idx % sides[0]
+            cam_idx_y = cam_idx // sides[0]
+
+            pos = lf.get_camera_pos(lf.camera_side, cam_idx_x, cam_idx_y)
         elif lf.lf_type == 'CYLINDER':
-            y_percentage_steps = 100.0 / lf.num_cams_y
-            r_percentage = (lf.camera_preview_index % y_percentage_steps) / y_percentage_steps
-            y_percentage = lf.camera_preview_index
-            pos = lf.get_camera_pos(int(y_percentage * lf.num_cams_y / 101),
-                                    int(r_percentage * lf.num_cams_radius))
+            sides = [lf.num_cams_radius, lf.num_cams_y]
+            num_cameras = sides[0] * sides[1]
+            cam_idx = int(lf.camera_preview_index * 0.01 * (num_cameras - 1))
+            cam_idx_r = cam_idx % sides[0]
+            cam_idx_y = cam_idx // sides[0]
+            pos = lf.get_camera_pos(cam_idx_y, cam_idx_r)
         elif lf.lf_type == 'SPHERE':
-            index = (lf.camera_preview_index / 100.0) * (len(lf.obj_grid.data.vertices) - 1)
-            pos = lf.get_camera_pos(int(index))
+            index = int((lf.camera_preview_index * 0.01) * (len(lf.obj_grid.data.vertices) - 1))
+            pos = lf.get_camera_pos(index)
         else:
             raise KeyError()
 
