@@ -13,7 +13,7 @@ def update_cube_camera(self, context):
     bpy.ops.lightfield.update_camera('EXEC_DEFAULT')
 
 
-def update_lightfield_index():
+def notify_active_object():
     ob = bpy.context.active_object
     if (not ob) or (not ob.type == 'EMPTY'):
         return
@@ -23,6 +23,12 @@ def update_lightfield_index():
         if lightfield.obj_empty == ob:
             scn.lightfield_index = lightfield.index
             break
+
+def update_lightfield_index(self, context):
+    scn = bpy.context.scene
+    if scn.lightfield_autoselect:
+        print("Autoselect")
+        bpy.ops.lightfield.select('EXEC_DEFAULT')
 
 
 def update_preview(self, context):

@@ -75,8 +75,12 @@ class LIGHTFIELD_OT_make_camera_active(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def invoke(self, context, event):
-        lf = utils.get_active_lightfield(context)
+        lf = context.scene.lightfield[context.scene.lightfield_index]
+        lf = (utils.get_lightfield_class(lf.lf_type))(lf)
         context.scene.camera = lf.obj_camera
+        render_settings = bpy.context.scene.render
+        render_settings.resolution_x = lf.res_x
+        render_settings.resolution_y = lf.res_y
         return {"FINISHED"}
 
 class LIGHTFIELD_OT_select(bpy.types.Operator):
@@ -86,7 +90,7 @@ class LIGHTFIELD_OT_select(bpy.types.Operator):
     bl_description = "Select the current lightfield in the viewport"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def invoke(self, context, event):
+    def execute(self, context):
         scn = context.scene
         idx = scn.lightfield_index
         if idx == -1:
@@ -124,6 +128,14 @@ class LIGHTFIELD_OT_update(bpy.types.Operator):
         grid.hide_select = True
 
         bpy.context.view_layer.objects.active = lf.obj_empty
+
+        scene = bpy.context.scene
+        rb = scene.render
+        if context.scene.camera == lf.obj_camera:
+            # The camera is this one, update the resolution
+            rb.resolution_x = lf.res_x
+            rb.resolution_y = lf.res_y
+
 
         return {'FINISHED'}
 

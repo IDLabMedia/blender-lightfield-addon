@@ -83,6 +83,10 @@ class DATA_PT_lightfield_camera(LightfieldButtonsPanel, Panel):
         col.prop(lf, "cube_camera", text="Cube Camera")
         col.prop(lf, "face_inside", text="Face Inside")
 
+        # Resolution
+        col.prop(lf, "res_x", text="Resolution X")
+        col.prop(lf, "res_y", text="Y")
+
         # FOV
         col = layout.column()
         if not lf.cube_camera:
@@ -91,6 +95,13 @@ class DATA_PT_lightfield_camera(LightfieldButtonsPanel, Panel):
             elif cam.lens_unit == 'FOV':
                 col.prop(cam, "angle")
             col.prop(cam, "lens_unit")
+        else:
+            scene = bpy.context.scene
+            rb = scene.render
+            res_x = lf.res_x
+            res_y = lf.res_y
+            if res_x != res_y:
+                col.label(text="Error: Resolution not square: %d x %d" % (res_x, res_y), icon='ERROR')
 
         # Sensor fit
         col = layout.column()
@@ -106,6 +117,15 @@ class DATA_PT_lightfield_camera(LightfieldButtonsPanel, Panel):
             sub = col.column(align=True)
             sub.active = cam.sensor_fit == 'VERTICAL'
             sub.prop(cam, "sensor_height", text="Height")
+
+        # Near and Far
+        col = layout.column()
+        col.separator()
+
+        col.separator()
+        sub = col.column(align=True)
+        sub.prop(cam, "clip_start", text="Clip Start")
+        sub.prop(cam, "clip_end", text="End")
 
 
 class DATA_PT_lightfield_dof(LightfieldButtonsPanel, Panel):
@@ -217,6 +237,7 @@ class LIGHTFIELD_PT_list(Panel):
 
         buttons.active = scn.lightfield_index != -1
         buttons.operator("lightfield.render", icon='OUTLINER_DATA_CAMERA', text='Render Lightfield')
+        layout.prop(scn, "lightfield_autoselect", text="Auto-select")
 
         operations = list.column()
 
@@ -281,6 +302,18 @@ class LIGHTFIELD_PT_preview(Panel):
 
         col = layout.column(align=True)
         col.label(text="Preview Camera:")
+
+        scene = bpy.context.scene
+        rb = scene.render
+        res_x = rb.resolution_x
+        res_y = rb.resolution_y
+        res_wrong = lf.res_x != res_x or lf.res_y != res_y
+        if res_wrong:
+            col.label(text="Resolution: %d x %d (Not updated!)" % (res_x, res_y), icon='ERROR')
+        else:
+            col.label(text="Resolution: %d x %d" % (res_x, res_y), icon='TEXTURE')
+
+
         if lf.lf_type == 'CUBOID':
             col.prop(lf, "camera_side", text="Side")
         col.prop(lf, "camera_facing", text="Facing")
@@ -288,9 +321,10 @@ class LIGHTFIELD_PT_preview(Panel):
         col = layout.column(align=True)
         col.prop(lf, "camera_preview_index", text="Grid index")
 
-        layout.operator("lightfield.make_camera_active",
-                icon='OUTLINER_DATA_CAMERA',
-                text='Make LF camera the active scene camera')
+        if res_wrong or lf.obj_camera != scene.camera:
+            layout.operator("lightfield.make_camera_active",
+                    icon='OUTLINER_DATA_CAMERA',
+                    text='Make LF camera the active scene camera')
 
 
 import textwrap

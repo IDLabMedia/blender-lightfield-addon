@@ -104,7 +104,7 @@ def load_handler(temp):
     bpy.msgbus.subscribe_rna(key=active_object,
                              owner=bpy.types.Scene.lightfield_index,
                              args=(),
-                             notify=update.update_lightfield_index)
+                             notify=update.notify_active_object)
 
 # Needed for updating the size correctly (no recursion).
 @bpy.app.handlers.persistent
@@ -131,7 +131,10 @@ def register():
 
     # Properties
     bpy.types.Scene.lightfield = bpy.props.CollectionProperty(type=lightfield.LightfieldPropertyGroup)
-    bpy.types.Scene.lightfield_index = bpy.props.IntProperty(default=-1)
+    bpy.types.Scene.lightfield_index = bpy.props.IntProperty(default=-1,
+            update=update.update_lightfield_index)
+    bpy.types.Scene.lightfield_autoselect = bpy.props.BoolProperty(default=True,
+            description="Automatically select light fields in the Viewport")
 
     # Menus
     bpy.types.VIEW3D_MT_add.append(gui.add_lightfield)
@@ -161,6 +164,7 @@ def unregister():
     # Remove properties
     del bpy.types.Scene.lightfield_index
     del bpy.types.Scene.lightfield
+    del bpy.types.Scene.lightfield_autoselect
 
     # Unregister classes
     for cls in reversed(classes):

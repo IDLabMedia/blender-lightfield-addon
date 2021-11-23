@@ -120,6 +120,19 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         update=update.update_preview
     )
 
+    # Resolution
+    res_x = IntProperty(default=1024,
+                        min=32,
+                        max=1024 * 48,
+                        description='X resolution of the output images',
+                        update=update.update_num_cameras)
+    res_y = IntProperty(default=1024,
+                        min=32,
+                        max=1024 * 48,
+                        description='Y resolution of the output images',
+                        update=update.update_num_cameras)
+
+
     # Dummies for keeping settings intact
     dummy_focal_length = FloatProperty()
 
@@ -373,6 +386,8 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         """
         scene = bpy.context.scene
         scene.render.resolution_percentage = 100
+        scene.render.resolution_x = res_x
+        scene.render.resolution_y = res_y
         scene.camera = self.obj_camera
         if self.output_depth:
             scene.render.image_settings.file_format = "OPEN_EXR"
