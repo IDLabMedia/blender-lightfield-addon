@@ -71,15 +71,20 @@ class LightfieldCuboid(LightfieldPropertyGroup):
                 'space': "{}_Space".format(base),
                 'front': "{}_Front".format(base)}
 
+    def get_side_map(self):
+        side_map = {'f': [self.num_cams_x, self.num_cams_z],
+                    'b': [self.num_cams_x, self.num_cams_z],
+                    'l': [self.num_cams_y, self.num_cams_z],
+                    'r': [self.num_cams_y, self.num_cams_z],
+                    'u': [self.num_cams_x, self.num_cams_y],
+                    'd': [self.num_cams_x, self.num_cams_y], }
+        return side_map
+
+
     def position_generator(self):
         # TODO: implement cube-map render
         sides = ['f', 'b', 'l', 'r', 'u', 'd']
-        side_map = {'f': [self.num_cams_x, self.num_cams_y],
-                    'b': [self.num_cams_x, self.num_cams_y],
-                    'l': [self.num_cams_z, self.num_cams_y],
-                    'r': [self.num_cams_z, self.num_cams_y],
-                    'u': [self.num_cams_x, self.num_cams_z],
-                    'd': [self.num_cams_x, self.num_cams_z], }
+        side_map = self.get_side_map()
         for s in sides:
             local_x_dir = side_map[s][0]
             local_y_dir = side_map[s][1]
@@ -96,43 +101,43 @@ class LightfieldCuboid(LightfieldPropertyGroup):
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
                                   -0.5 + x * base_x,
                                    0.5,
-                                   0.5 - y * base_y,
+                                   0.5 - y * base_z,
                                    alpha=0.5 * math.pi)
 
         elif side == 'b':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
                                    0.5 - x * base_x,
                                   -0.5,
-                                   0.5 - y * base_y,
+                                   0.5 - y * base_z,
                                   alpha=0.5 * math.pi,
                                   phi=math.pi)
 
         elif side == 'l':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_z + x),
                                   -0.5,
-                                  -0.5 + x * base_z,
-                                   0.5 - y * base_y,
+                                  -0.5 + x * base_y,
+                                   0.5 - y * base_z,
                                   alpha=0.5 * math.pi,
                                   phi=math.pi / 2)
 
         elif side == 'r':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_z + x),
                                    0.5,
-                                   0.5 - x * base_z,
-                                   0.5 - y * base_y,
+                                   0.5 - x * base_y,
+                                   0.5 - y * base_z,
                                   alpha=0.5 * math.pi,
                                   phi=-math.pi / 2)
 
         elif side == 'u':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
-                                  -0.5 + x * base_x,
-                                   0.5 - y * base_z,
+                                   0.5 - x * base_x,
+                                  -0.5 + y * base_y,
                                    0.5,
                                   alpha=math.pi)
 
         elif side == 'd':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
-                                   0.5 - x * base_x,
-                                   0.5 - y * base_z,
+                                  -0.5 + x * base_x,
+                                   0.5 - y * base_y,
                                   -0.5
                                   )

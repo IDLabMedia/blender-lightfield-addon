@@ -159,12 +159,7 @@ class LIGHTFIELD_OT_update_preview(bpy.types.Operator):
             cam_idx_y = cam_idx // sides[0]
             pos = lf.get_camera_pos(cam_idx_x, cam_idx_y)
         elif lf.lf_type == 'CUBOID':
-            side_map = {'f': [lf.num_cams_x, lf.num_cams_y],
-                        'b': [lf.num_cams_x, lf.num_cams_y],
-                        'l': [lf.num_cams_z, lf.num_cams_y],
-                        'r': [lf.num_cams_z, lf.num_cams_y],
-                        'u': [lf.num_cams_x, lf.num_cams_z],
-                        'd': [lf.num_cams_x, lf.num_cams_z], }
+            side_map = lf.get_side_map()
             sides = side_map[lf.camera_side]
             num_cameras = sides[0] * sides[1]
             cam_idx = int(lf.camera_preview_index * 0.01 * (num_cameras - 1))
