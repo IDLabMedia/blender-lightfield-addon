@@ -93,7 +93,7 @@ class LIGHTFIELD_OT_select(bpy.types.Operator):
     def execute(self, context):
         scn = context.scene
         idx = scn.lightfield_index
-        if idx == -1:
+        if idx == -1 or idx >= len(scn.lightfield):
             return {'CANCELLED'}
         ob = scn.lightfield[idx].obj_empty
         bpy.ops.object.select_all(action='DESELECT')

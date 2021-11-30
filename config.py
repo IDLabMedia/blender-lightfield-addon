@@ -56,5 +56,3 @@ class EXPORT_OT_lightfield_config_append(bpy.types.Operator):
         csv_file.close()
 
         return {'FINISHED'}
-
-# TODO: Import configuration could be useful.

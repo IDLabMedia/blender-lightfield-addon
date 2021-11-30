@@ -21,6 +21,7 @@ class LightfieldCuboid(LightfieldPropertyGroup):
         self.obj_visuals.add().obj_visual = visuals[2]
 
         self.obj_grid = visuals[0]
+        self.set_camera_to_first_view()
 
     def construct_visuals(self, collection):
         grid = self.create_grid()
@@ -33,60 +34,6 @@ class LightfieldCuboid(LightfieldPropertyGroup):
         collection.objects.link(front)
 
         return [grid, space, front]
-
-    def create_grid(self):
-        """
-        Create the visual grid indicating all the camera positions.
-
-        :return: Object containing grid.
-        """
-        name = self.construct_names()['grid']
-
-        # Mesh data
-        mesh = bpy.data.meshes.new(name)
-        # Object data
-        grid = bpy.data.objects.new(name, mesh)
-
-        # Create bmesh to construct grid.
-        bm = bmesh.new()
-
-        # Add vertices
-        # Front & Back (Z constant):
-        for y in range(self.num_cams_y):
-            for x in range(self.num_cams_x):
-                bm.verts.new((-0.5 + x / (self.num_cams_x - 1),
-                              0.5 - y / (self.num_cams_y - 1),
-                              0.5))
-                bm.verts.new((-0.5 + x / (self.num_cams_x - 1),
-                              0.5 - y / (self.num_cams_y - 1),
-                              -0.5))
-
-        # Left & Right (X constant):
-        for y in range(self.num_cams_y):
-            for z in range(self.num_cams_z):
-                bm.verts.new((-0.5,
-                              0.5 - y / (self.num_cams_y - 1),
-                              -0.5 + z / (self.num_cams_z - 1)))
-                bm.verts.new((0.5,
-                              0.5 - y / (self.num_cams_y - 1),
-                              -0.5 + z / (self.num_cams_z - 1)))
-
-        # Top & Bottom (Y constant):
-        for z in range(self.num_cams_z):
-            for x in range(self.num_cams_x):
-                bm.verts.new((-0.5 + x / (self.num_cams_x - 1),
-                              0.5,
-                              -0.5 + z / (self.num_cams_z - 1)))
-                bm.verts.new((-0.5 + x / (self.num_cams_x - 1),
-                              -0.5,
-                              -0.5 + z / (self.num_cams_z - 1)))
-
-        bm.to_mesh(mesh)
-        bm.free()
-
-        grid.hide_render = True
-
-        return grid
 
     def create_space(self):
         """
@@ -148,40 +95,44 @@ class LightfieldCuboid(LightfieldPropertyGroup):
         if side == 'f':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
                                   -0.5 + x * base_x,
-                                  0.5 - y * base_y,
-                                  -0.5)
+                                   0.5,
+                                   0.5 - y * base_y,
+                                   alpha=0.5 * math.pi)
 
         elif side == 'b':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
-                                  0.5 - x * base_x,
-                                  0.5 - y * base_y,
-                                  0.5,
-                                  theta=math.pi)
+                                   0.5 - x * base_x,
+                                  -0.5,
+                                   0.5 - y * base_y,
+                                  alpha=0.5 * math.pi,
+                                  phi=math.pi)
 
         elif side == 'l':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_z + x),
                                   -0.5,
-                                  0.5 - y * base_y,
-                                  0.5 - x * base_z,
-                                  theta=math.pi / 2)
+                                  -0.5 + x * base_z,
+                                   0.5 - y * base_y,
+                                  alpha=0.5 * math.pi,
+                                  phi=math.pi / 2)
 
         elif side == 'r':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_z + x),
-                                  0.5,
-                                  0.5 - y * base_y,
-                                  -0.5 + x * base_z,
-                                  theta=-math.pi / 2)
+                                   0.5,
+                                   0.5 - x * base_z,
+                                   0.5 - y * base_y,
+                                  alpha=0.5 * math.pi,
+                                  phi=-math.pi / 2)
 
         elif side == 'u':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
                                   -0.5 + x * base_x,
-                                  0.5,
-                                  0.5 - y * base_z,
-                                  alpha=math.pi / 2)
+                                   0.5 - y * base_z,
+                                   0.5,
+                                  alpha=math.pi)
 
         elif side == 'd':
             return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_x + x),
-                                  -0.5 + x * base_x,
-                                  -0.5,
-                                  -0.5 + y * base_z,
-                                  alpha=-math.pi / 2)
+                                   0.5 - x * base_x,
+                                   0.5 - y * base_z,
+                                  -0.5
+                                  )

@@ -4,6 +4,7 @@ import os
 import bpy
 from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty, PointerProperty, EnumProperty, \
     CollectionProperty
+import bmesh
 from . import update, file_utils
 
 
@@ -229,6 +230,33 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         """
         raise NotImplementedError()
 
+    def create_grid(self):
+        """
+        Create the visual grid indicating all the camera positions.
+
+        :return: Object containing grid.
+        """
+        name = self.construct_names()['grid']
+
+        # Mesh data
+        mesh = bpy.data.meshes.new(name)
+        # Object data
+        grid = bpy.data.objects.new(name, mesh)
+
+        # Create bmesh to construct grid.
+        bm = bmesh.new()
+
+        # Add vertices
+        for cam_pos in self.position_generator():
+            bm.verts.new((cam_pos.x, cam_pos.y, cam_pos.z))
+
+        bm.to_mesh(mesh)
+        bm.free()
+
+        grid.hide_render = True
+
+        return grid
+
     def default_construct(self):
         names = self.construct_names()
         if self.LIGHTFIELD_COLLECTION in bpy.data.collections:
@@ -240,7 +268,6 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         # Create new Empty object.
         lightfield = bpy.data.objects.new(names['lightfield'], object_data=None)
         lightfield.empty_display_size = 0.2
-        lightfield.rotation_euler[0] = math.pi / 2
 
         # Create Camera object and data
         cam_obj, cam_data = self.create_camera(collection, names['camera'])
@@ -263,14 +290,19 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         # Put the lightfield at the location of the cursor
         lightfield.location = bpy.context.scene.cursor.location
 
-        # In case of Cylinder and sphere, limit rotation
-
         # Update lightfield references
         self.obj_empty = lightfield
         self.obj_camera = cam_obj
         self.data_camera = cam_data
 
         return visuals
+
+    def set_camera_to_first_view(self):
+        gen = self.position_generator()
+        pos = next(gen)
+        del gen
+        self.obj_camera.location = pos.location()
+        self.obj_camera.rotation_euler = pos.rotation()
 
     def get_output_directory(self, frame_number=None):
         if frame_number is None:
@@ -369,8 +401,8 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         front_empty = bpy.data.objects.new(
             self.construct_names()['front'], object_data=None)
         front_empty.empty_display_type = 'SINGLE_ARROW'
-        front_empty.scale[2] = -1
         front_empty.empty_display_size = 1.5
+        front_empty.rotation_euler[0] = -0.5 * math.pi
 
         return front_empty
 

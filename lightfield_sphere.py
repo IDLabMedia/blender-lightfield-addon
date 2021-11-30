@@ -19,6 +19,7 @@ class LightfieldSphere(LightfieldPropertyGroup):
         self.obj_visuals.add().obj_visual = visuals[2]
 
         self.obj_grid = visuals[0]
+        self.set_camera_to_first_view()
 
     def construct_visuals(self, collection):
         grid = self.create_grid()
@@ -104,23 +105,20 @@ class LightfieldSphere(LightfieldPropertyGroup):
         vertex = self.obj_grid.data.vertices[index]
 
         normal = vertex.normal
-        z = Vector([0.0, 1.0, 0.0])
-        side = z.cross(normal)
-        if side.length > 0.0001:
-            up = side.cross(normal)
 
-            basis = Matrix.Identity(3)
-            basis.col[0] = side if self.face_inside else -side
-            basis.col[1] = -up
-            basis.col[2] = normal if self.face_inside else -normal
-            # basis = basis.to_4x4()
-            euler = basis.to_euler()
-        else:
-            euler = vertex.normal.to_track_quat('Z', 'Y').to_euler()
-            if self.face_inside:
-                for i in range(2,3):
-                    euler[i] *= -1
-            #euler[2] = 0
+        z = Vector([0.0, 0.0, 1.0])
+        side = z.cross(normal)
+        if side.length <= 0.0001:
+            z = Vector([0.0, 1.0, 0.0])
+            side = z.cross(normal)
+
+        up = side.cross(normal)
+
+        basis = Matrix.Identity(3)
+        basis.col[0] = side if self.face_inside else -side
+        basis.col[1] = -up
+        basis.col[2] = normal if self.face_inside else -normal
+        euler = basis.to_euler()
 
         return CameraPosition("view_{:04d}f".format(index),
                               vertex.co[0],

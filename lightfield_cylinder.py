@@ -22,6 +22,7 @@ class LightfieldCylinder(LightfieldPropertyGroup):
         self.obj_visuals.add().obj_visual = visuals[3]
 
         self.obj_grid = visuals[1]
+        self.set_camera_to_first_view()
 
     def construct_visuals(self, collection):
         grid = self.create_grid()
@@ -36,35 +37,6 @@ class LightfieldCylinder(LightfieldPropertyGroup):
 
         return [space, grid, front, edges]
 
-    def create_grid(self):
-        """
-        Create the visual grid indicating all the camera positions.
-
-        :return: Object containing grid.
-        """
-        name = self.construct_names()['grid']
-
-        # Mesh data
-        mesh = bpy.data.meshes.new(name)
-        # Object data
-        grid = bpy.data.objects.new(name, mesh)
-
-        # Create bmesh to construct grid.
-        bm = bmesh.new()
-
-        # Add vertices
-        for y in range(self.num_cams_y):
-            for r in range(self.num_cams_radius):
-                bm.verts.new((-0.5 * math.sin(r * 2 * math.pi / self.num_cams_radius),
-                              0.5 - y / (self.num_cams_y - 1),
-                              -0.5 * math.cos(r * 2 * math.pi / self.num_cams_radius)))
-
-        bm.to_mesh(mesh)
-        bm.free()
-
-        grid.hide_render = True
-
-        return grid
 
     def create_space(self):
         """
@@ -77,17 +49,16 @@ class LightfieldCylinder(LightfieldPropertyGroup):
         dumped_meshes = []
 
         # Top and bottom circle colored
-        bpy.ops.mesh.primitive_circle_add(location=(0.0, 1.0, 0.0), rotation=(-math.pi / 2, 0.0, 0.0), fill_type='NGON')
+        bpy.ops.mesh.primitive_circle_add(location=(0.0, 0.0,  1.0), fill_type='NGON')
         c2 = bpy.context.object
-        bpy.ops.mesh.primitive_circle_add(location=(0.0, -1.0, 0.0), rotation=(math.pi / 2, 0.0, 0.0), fill_type='NGON')
+        bpy.ops.mesh.primitive_circle_add(location=(0.0, 0.0, -1.0), fill_type='NGON')
         c1 = bpy.context.object
         dumped_meshes.append(c2.data)
         dumped_meshes.append(c1.data)
 
         # Cylinder
         name = self.construct_names()['space']
-        bpy.ops.mesh.primitive_cylinder_add(location=(0.0, 0.0, 0.0), end_fill_type='NOTHING',
-                                            rotation=(math.pi / 2, 0, 0))
+        bpy.ops.mesh.primitive_cylinder_add(location=(0.0, 0.0, 0.0), end_fill_type='NGON')
         bpy.ops.object.shade_smooth()
         space = bpy.context.object
         space.name = name
@@ -109,9 +80,9 @@ class LightfieldCylinder(LightfieldPropertyGroup):
         space.hide_render = True
 
         # Top and bottom circle
-        bpy.ops.mesh.primitive_circle_add(location=(0.0, 1.0, 0.0), rotation=(math.pi / 2, 0.0, 0.0))
+        bpy.ops.mesh.primitive_circle_add(location=(0.0, 0.0,  1.0))
         c2 = bpy.context.object
-        bpy.ops.mesh.primitive_circle_add(location=(0.0, -1.0, 0.0), rotation=(math.pi / 2, 0.0, 0.0))
+        bpy.ops.mesh.primitive_circle_add(location=(0.0, 0.0, -1.0))
         c1 = bpy.context.object
         c1.name = self.construct_names()['edges']
         c1.data.name = c1.name
@@ -148,8 +119,10 @@ class LightfieldCylinder(LightfieldPropertyGroup):
 
     def get_camera_pos(self, y, r):
         base_y = 1 / (self.num_cams_y - 1)
+        angle = r * 2 * math.pi / self.num_cams_radius
         return CameraPosition("view_{:04d}f".format(y * self.num_cams_radius + r),
-                              -0.5 * math.sin(r * 2 * math.pi / self.num_cams_radius),
-                              0.5 - y * base_y,
-                              -0.5 * math.cos(r * 2 * math.pi / self.num_cams_radius),
-                              theta=r * 2 * math.pi / self.num_cams_radius + (math.pi if self.face_inside else 0))
+                               0.5 * math.sin(angle),
+                               0.5 * math.cos(angle),
+                               0.5 - y * base_y,
+                              alpha=0.5*math.pi,
+                              phi=-angle + (math.pi if self.face_inside else 0))
