@@ -238,6 +238,7 @@ class LIGHTFIELD_PT_list(Panel):
         buttons.active = scn.lightfield_index != -1
         buttons.operator("lightfield.render", icon='OUTLINER_DATA_CAMERA', text='Render Lightfield')
         layout.prop(scn, "lightfield_autoselect", text="Auto-select")
+        layout.prop(scn, "lightfield_dryrun", text="Dry-run")
 
         operations = list.column()
 

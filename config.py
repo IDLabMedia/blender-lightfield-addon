@@ -18,6 +18,48 @@ class EXPORT_OT_lightfield_config(bpy.types.Operator):
         with open(bpy.path.abspath(lf.path_config_file), mode='w', newline='') as csv_file:
             writer = csv.writer(csv_file, delimiter=',')
 
+            cam = lf.data_camera
+
+            camera_meta_fields = ["type"]
+            camera_meta = [cam.type]
+            if cam.type == 'PANO':
+                engine = context.engine
+                if engine == 'CYCLES':
+                    ccam = cam.cycles
+                    camera_meta_fields.append("panorama_type")
+                    camera_meta.append(ccam.panorama_type)
+                    if ccam.panorama_type == 'FISHEYE_EQUIDISTANT':
+                        camera_meta_fields.append("fisheye_fov")
+                        camera_meta.append(ccam.fisheye_fov)
+                    elif ccam.panorama_type == 'FISHEYE_EQUISOLID':
+                        camera_meta_fields.append("fisheye_lens")
+                        camera_meta_fields.append("fisheye_fov")
+                        camera_meta.append(ccam.fisheye_lens)
+                        camera_meta.append(ccam.fisheye_fov)
+                    elif ccam.panorama_type == 'EQUIRECTANGULAR':
+                        camera_meta_fields.append("latitude_min")
+                        camera_meta_fields.append("latitude_max")
+                        camera_meta_fields.append("longitude_min")
+                        camera_meta_fields.append("longitude_max")
+                        camera_meta.append(ccam.latitude_min)
+                        camera_meta.append(ccam.latitude_max)
+                        camera_meta.append(ccam.longitude_min)
+                        camera_meta.append(ccam.longitude_max)
+                else:
+                    raise Exception("Panoramic lenses only supported in Cycles")
+            else:
+                camera_meta_fields.append("lens_unit")
+                camera_meta.append(cam.lens_unit)
+                if cam.lens_unit == 'MILLIMETERS':
+                    camera_meta_fields.append("lens")
+                    camera_meta.append(cam.lens)
+                elif cam.lens_unit == 'FOV':
+                    camera_meta_fields.append("angle")
+                    camera_meta.append(cam.angle)
+            writer.writerow(camera_meta_fields)
+            writer.writerow(camera_meta)
+
+
             projection_matrix = lf.obj_camera.calc_matrix_camera(
                 context.evaluated_depsgraph_get(),
                 x=context.scene.render.resolution_x,

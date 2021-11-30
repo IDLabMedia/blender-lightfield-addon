@@ -418,8 +418,8 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         """
         scene = bpy.context.scene
         scene.render.resolution_percentage = 100
-        scene.render.resolution_x = res_x
-        scene.render.resolution_y = res_y
+        scene.render.resolution_x = self.res_x
+        scene.render.resolution_y = self.res_y
         scene.camera = self.obj_camera
         if self.output_depth:
             scene.render.image_settings.file_format = "OPEN_EXR"
@@ -506,7 +506,8 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
 
         filename = cam_pos.name + extension
         bpy.context.scene.render.filepath = os.path.join(output_directory, filename)
-        bpy.ops.render.render(write_still=True)
+        if not bpy.context.scene.lightfield_dryrun:
+            bpy.ops.render.render(write_still=True)
 
     def position_generator(self):
         """
