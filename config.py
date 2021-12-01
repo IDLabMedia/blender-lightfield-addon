@@ -70,6 +70,20 @@ class EXPORT_OT_lightfield_config(bpy.types.Operator):
                 scale_y=context.scene.render.pixel_aspect_y)
             writer.writerow([lf.lf_type])
             writer.writerow([lf.res_x, lf.res_y])
+            writer.writerow(["sensor_width", "sensor_height"])
+            if cam.sensor_fit == 'AUTO':
+                size = cam.sensor_width
+                res = max(lf.res_x, lf.res_y)
+                writer.writerow([size * lf.res_x / res, size * lf.res_y / res])
+            elif cam.sensor_fit == 'HORIZONTAL':
+                size = cam.sensor_width
+                writer.writerow([size, size * lf.res_y / lf.res_x])
+            elif cam.sensor_fit == 'VERTICAL':
+                size = cam.sensor_height
+                writer.writerow([size * lf.res_x / lf.res_y, size])
+            else:
+                raise Exception("Unknown sensor fit")
+
             writer.writerow(["projection_matrix"])
             for i in range(0, 4):
                 writer.writerow([projection_matrix[i][0],
