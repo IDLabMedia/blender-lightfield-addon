@@ -11,11 +11,13 @@ class EXPORT_OT_lightfield_config(bpy.types.Operator):
     bl_label = """Export lightfield configuration"""
     bl_options = {'REGISTER'}
 
+    frame_number = bpy.props.IntProperty()
+
     def execute(self, context):
         lf = context.scene.lightfield[context.scene.lightfield_index]
         lf = (utils.get_lightfield_class(lf.lf_type))(lf)
 
-        with open(bpy.path.abspath(lf.path_config_file), mode='w', newline='') as csv_file:
+        with open(lf.get_path_config_file(self.frame_number), mode='w', newline='') as csv_file:
             writer = csv.writer(csv_file, delimiter=',')
 
             cam = lf.data_camera
@@ -68,11 +70,13 @@ class EXPORT_OT_lightfield_config(bpy.types.Operator):
                 scale_y=context.scene.render.pixel_aspect_y)
             writer.writerow([lf.lf_type])
             writer.writerow([lf.res_x, lf.res_y])
+            writer.writerow(["projection_matrix"])
             for i in range(0, 4):
                 writer.writerow([projection_matrix[i][0],
                                  projection_matrix[i][1],
                                  projection_matrix[i][2],
                                  projection_matrix[i][3]])
+            writer.writerow(["name", "x", "y", "z", "rot_x", "rot_y", "rot_z"])
 
         return {'FINISHED'}
 
@@ -83,13 +87,14 @@ class EXPORT_OT_lightfield_config_append(bpy.types.Operator):
     bl_label = """Append a camera position to the lightfield configuration"""
     bl_options = {'REGISTER'}
 
+    frame_number = bpy.props.IntProperty()
     filename = bpy.props.StringProperty()
 
     def execute(self, context):
         lf = context.scene.lightfield[context.scene.lightfield_index]
         lf = (utils.get_lightfield_class(lf.lf_type))(lf)
 
-        with open(bpy.path.abspath(lf.path_config_file), mode='a', newline='') as csv_file:
+        with open(lf.get_path_config_file(self.frame_number), mode='a', newline='') as csv_file:
             writer = csv.writer(csv_file, delimiter=',')
             x, y, z = lf.obj_camera.matrix_world.to_translation()
             rx, ry, rz = lf.obj_camera.matrix_world.to_euler()

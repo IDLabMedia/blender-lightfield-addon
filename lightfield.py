@@ -216,12 +216,6 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         default=file_utils.get_default_output_directory(),
         description='Target directory for blender output',
     )
-    path_config_file = StringProperty(
-        name='',
-        subtype='FILE_PATH',
-        default=file_utils.get_default_path_config_file(),
-        description='File path for light field config file',
-    )
 
     def construct(self):
         """
@@ -313,22 +307,21 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
             directory = os.path.join(directory, "f{:05}".format(frame_number))
         return directory + "/"
 
-    def get_path_config_file(self):
-        return os.path.join(self.get_output_directory(), "lightfield.cfg")
+    def get_path_config_file(self, frame_number=None):
+        return os.path.join(self.get_output_directory(frame_number), "lightfield.cfg")
 
-    def get_output_image_directory(self):
-        subdir = "img"
+    def get_output_image_directory(self, frame_number=None):
+        subdir = self.get_image_type()
+        return os.path.join(self.get_output_directory(frame_number), subdir) + "/"
+
+    def get_image_type(self):
         if self.output_depth:
-            subdir = "exr"
+            return "exr"
         else:
-            subdir = "png"
-        return os.path.join(self.get_output_directory(), subdir) + "/"
+            return "png"
 
     def get_extension(self):
-        if self.output_depth:
-            return ".exr"
-        else:
-            return ".png"
+        return "." + self.get_image_type()
 
     def construct_visuals(self, collection):
         """
@@ -457,16 +450,17 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         rb.use_file_extension = False
         extension = self.get_extension()
 
-        bpy.ops.lightfield.export_config()
         # Render frames if sequence, only 1 frame if still.
         if self.sequence_start == self.sequence_end:
-            output_directory = self.get_output_directory()
+            bpy.ops.lightfield.export_config(frame_number=self.sequence_start)
             bpy.context.scene.frame_current = self.sequence_end
+            output_directory = self.get_output_image_directory()
             self.render_time_frame(output_directory, extension)
         else:
             for i in range(self.sequence_start, self.sequence_end, self.sequence_steps):
+                bpy.ops.lightfield.export_config(frame_number=i)
                 bpy.context.scene.frame_current = i
-                output_directory = self.get_output_directory(frame=i)
+                output_directory = self.get_output_image_directory(frame=i)
                 self.render_time_frame(output_directory, extension)
 
         # Reset parameters
@@ -502,7 +496,8 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         self.obj_camera.location = cam_pos.location()
         self.obj_camera.rotation_euler = cam_pos.rotation()
 
-        bpy.ops.lightfield.export_config_append(filename=cam_pos.name)
+        frame_number = bpy.context.scene.frame_current
+        bpy.ops.lightfield.export_config_append(filename=cam_pos.name, frame_number=frame_number)
 
         filename = cam_pos.name + extension
         bpy.context.scene.render.filepath = os.path.join(output_directory, filename)
