@@ -190,6 +190,6 @@ class EXPORT_OT_lightfield_config_append(bpy.types.Operator):
                 'rotation': [rx, ry, rz],
                 'world_matrix': [[lf.obj_camera.matrix_world[r][c] for c in range(4)] for r in range(4)],
             })
-            json.dump(cfg, json_file)
+            json.dump(cfg, json_file, indent=2)
 
         return {'FINISHED'}
