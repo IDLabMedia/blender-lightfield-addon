@@ -1,6 +1,7 @@
 import bpy
 import csv
 import os
+import json
 
 from . import utils, file_utils
 
@@ -18,6 +19,69 @@ class EXPORT_OT_lightfield_config(bpy.types.Operator):
         lf = (utils.get_lightfield_class(lf.lf_type))(lf)
 
         os.makedirs(lf.get_output_directory(), exist_ok=True)
+
+        with open(lf.get_path_config_file_json(self.frame_number), mode='w', newline='') as json_file:
+            cam = lf.data_camera
+            sensor_size = []
+            if cam.sensor_fit == 'AUTO':
+                size = cam.sensor_width
+                res = max(lf.res_x, lf.res_y)
+                sensor_size = [size * lf.res_x / res, size * lf.res_y / res]
+            elif cam.sensor_fit == 'HORIZONTAL':
+                size = cam.sensor_width
+                sensor_size = [size, size * lf.res_y / lf.res_x]
+            elif cam.sensor_fit == 'VERTICAL':
+                size = cam.sensor_height
+                sensor_size = [size * lf.res_x / lf.res_y, size]
+            else:
+                raise Exception("Unknown sensor fit")
+
+            cfg = {
+                'camera': {
+                    'type': cam.type,
+                },
+                'lf_type': lf.lf_type,
+                'resolution': [lf.res_x, lf.res_y],
+                'sensor_size': sensor_size,
+            }
+            if cam.type == 'PANO':
+                engine = context.engine
+                if engine == 'CYCLES':
+                    ccam = cam.cycles
+                    cfg['camera']['panorama_type'] = ccam.panorama_type
+                    if ccam.panorama_type == 'FISHEYE_EQUIDISTANT':
+                        cfg['camera']['fisheye_fov'] = ccam.fisheye_fov
+                    elif ccam.panorama_type == 'FISHEYE_EQUISOLID':
+                        cfg['camera']['fisheye_lens'] = ccam.fisheye_lens
+                        cfg['camera']['fisheye_fov'] = ccam.fisheye_fov
+                    elif ccam.panorama_type == 'EQUIRECTANGULAR':
+                        cfg['camera']['latitude_min'] = ccam.latitude_min
+                        cfg['camera']['latitude_max'] = ccam.latitude_max
+                        cfg['camera']['longitude_min'] = ccam.longitude_min
+                        cfg['camera']['longitude_max'] = ccam.longitude_max
+                else:
+                    raise Exception("Panoramic lenses only supported in Cycles")
+            elif cam.type == 'PERSP':
+                cfg['camera']['lens_unit'] = ccam.lens_unit
+                if cam.lens_unit == 'MILLIMETERS':
+                    cfg['camera']['focal_length'] = ccam.lens
+                elif cam.lens_unit == 'FOV':
+                    cfg['camera']['angle'] = ccam.angle
+
+                projection_matrix = lf.obj_camera.calc_matrix_camera(
+                    context.evaluated_depsgraph_get(),
+                    x=context.scene.render.resolution_x,
+                    y=context.scene.render.resolution_y,
+                    scale_x=context.scene.render.pixel_aspect_x,
+                    scale_y=context.scene.render.pixel_aspect_y)
+
+                cfg['camera']['projection_matrix'] = projection_matrix
+
+            cfg['frames'] = []
+
+            json.dump(cfg, json_file, indent=2)
+
+
 
         with open(lf.get_path_config_file(self.frame_number), mode='w', newline='') as csv_file:
             writer = csv.writer(csv_file, delimiter=',')
@@ -116,6 +180,16 @@ class EXPORT_OT_lightfield_config_append(bpy.types.Operator):
             rx, ry, rz = lf.obj_camera.matrix_world.to_euler()
             writer.writerow([self.filename, x, y, z, rx, ry, rz])
 
-        csv_file.close()
+        with open(lf.get_path_config_file_json(self.frame_number), mode='rw', newline='') as json_file:
+            cfg = json.load(json_file)
+            x, y, z = lf.obj_camera.matrix_world.to_translation()
+            rx, ry, rz = lf.obj_camera.matrix_world.to_euler()
+            cfg['frames'].append({
+                'name': self.filename,
+                'position': [x, y, z],
+                'rotation': [rx, ry, rz],
+                'world_matrix': lf.obj_camera.matrix_world,
+            })
+            json.dump(cfg, json_file)
 
         return {'FINISHED'}

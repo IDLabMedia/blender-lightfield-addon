@@ -310,6 +310,9 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
     def get_path_config_file(self, frame_number=None):
         return os.path.join(self.get_output_directory(frame_number), "lightfield.cfg")
 
+    def get_path_config_file_json(self, frame_number=None):
+        return os.path.join(self.get_output_directory(frame_number), "lightfield.json")
+
     def get_output_image_directory(self, frame_number=None):
         subdir = self.get_image_type()
         return os.path.join(self.get_output_directory(frame_number), subdir) + "/"
