@@ -5,7 +5,6 @@ import json
 
 from . import utils, file_utils
 
-
 # Export configuration of current setup for later use.
 class EXPORT_OT_lightfield_config(bpy.types.Operator):
     bl_idname = "lightfield.export_config"
@@ -75,7 +74,7 @@ class EXPORT_OT_lightfield_config(bpy.types.Operator):
                     scale_x=context.scene.render.pixel_aspect_x,
                     scale_y=context.scene.render.pixel_aspect_y)
 
-                cfg['camera']['projection_matrix'] = projection_matrix
+                cfg['camera']['projection_matrix'] = [[projection_matrix[r][c] for c in range(4)] for r in range(4)]
 
             cfg['frames'] = []
 
@@ -189,7 +188,7 @@ class EXPORT_OT_lightfield_config_append(bpy.types.Operator):
                 'name': self.filename,
                 'position': [x, y, z],
                 'rotation': [rx, ry, rz],
-                'world_matrix': lf.obj_camera.matrix_world,
+                'world_matrix': [[lf.obj_camera.matrix_world[r][c] for c in range(4)] for r in range(4)],
             })
             json.dump(cfg, json_file)
 
