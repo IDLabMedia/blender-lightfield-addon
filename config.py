@@ -61,11 +61,11 @@ class EXPORT_OT_lightfield_config(bpy.types.Operator):
                 else:
                     raise Exception("Panoramic lenses only supported in Cycles")
             elif cam.type == 'PERSP':
-                cfg['camera']['lens_unit'] = ccam.lens_unit
+                cfg['camera']['lens_unit'] = cam.lens_unit
                 if cam.lens_unit == 'MILLIMETERS':
-                    cfg['camera']['focal_length'] = ccam.lens
+                    cfg['camera']['focal_length'] = cam.lens
                 elif cam.lens_unit == 'FOV':
-                    cfg['camera']['angle'] = ccam.angle
+                    cfg['camera']['angle'] = cam.angle
 
                 projection_matrix = lf.obj_camera.calc_matrix_camera(
                     context.evaluated_depsgraph_get(),
