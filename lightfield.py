@@ -43,7 +43,7 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
     )
     # Number of cameras in X direction
     num_cams_x = IntProperty(default=3,
-                             min=3,
+                             min=2,
                              max=2000,
                              description='Number of cameras in X direction',
                              update=update.update_num_cameras
@@ -51,7 +51,7 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
     # Number of cameras in Y direction
     # Also used for cylinder and sphere
     num_cams_y = IntProperty(default=3,
-                             min=3,
+                             min=2,
                              max=2000,
                              description='Number of cameras in Y direction',
                              update=update.update_num_cameras
@@ -59,7 +59,7 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
     # Number of cameras in Z direction
     # Only for cuboid
     num_cams_z = IntProperty(default=3,
-                             min=3,
+                             min=2,
                              max=2000,
                              description='Number of cameras in Z direction',
                              update=update.update_num_cameras
@@ -73,7 +73,7 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
                                   )
     # Only for sphere
     num_cams_subdiv = IntProperty(default=3,
-                                  min=2,
+                                  min=1,
                                   max=6,
                                   description='Number of cameras on the icosphere',
                                   update=update.update_num_cameras
