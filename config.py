@@ -180,8 +180,9 @@ class EXPORT_OT_lightfield_config_append(bpy.types.Operator):
             rx, ry, rz = lf.obj_camera.matrix_world.to_euler()
             writer.writerow([self.filename, x, y, z, rx, ry, rz])
 
-        with open(lf.get_path_config_file_json(self.frame_number), mode='rw', newline='') as json_file:
+        with open(lf.get_path_config_file_json(self.frame_number), mode='r', newline='') as json_file:
             cfg = json.load(json_file)
+        with open(lf.get_path_config_file_json(self.frame_number), mode='w', newline='') as json_file:
             x, y, z = lf.obj_camera.matrix_world.to_translation()
             rx, ry, rz = lf.obj_camera.matrix_world.to_euler()
             cfg['frames'].append({
