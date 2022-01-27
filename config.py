@@ -65,6 +65,7 @@ class EXPORT_OT_lightfield_config(bpy.types.Operator):
                 if cam.lens_unit == 'MILLIMETERS':
                     cfg['camera']['focal_length'] = cam.lens
                 elif cam.lens_unit == 'FOV':
+                    # TODO this is ambiguous.
                     cfg['camera']['angle'] = cam.angle
 
                 projection_matrix = lf.obj_camera.calc_matrix_camera(
