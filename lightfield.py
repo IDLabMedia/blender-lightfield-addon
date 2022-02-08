@@ -504,7 +504,7 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
 
         filename = cam_pos.name + extension
         bpy.context.scene.render.filepath = os.path.join(output_directory, filename)
-        if not bpy.context.scene.lightfield_dryrun:
+        if not bpy.context.scene.lightfield_dryrun and not bpy.context.scene.lightfield_donotoverwrite:
             bpy.ops.render.render(write_still=True)
 
     def position_generator(self):

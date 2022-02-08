@@ -137,6 +137,8 @@ def register():
             description="Automatically select light fields in the Viewport")
     bpy.types.Scene.lightfield_dryrun = bpy.props.BoolProperty(default=False,
             description="Dry-run the render, producing config and directories without actual renders.")
+    bpy.types.Scene.lightfield_donotoverwrite = bpy.props.BoolProperty(default=False,
+            description="Do not render views corresponding existing files.")
 
     # Menus
     bpy.types.VIEW3D_MT_add.append(gui.add_lightfield)
@@ -168,6 +170,7 @@ def unregister():
     del bpy.types.Scene.lightfield
     del bpy.types.Scene.lightfield_autoselect
     del bpy.types.Scene.lightfield_dryrun
+    del bpy.types.Scene.lightfield_donotoverwrite
 
     # Unregister classes
     for cls in reversed(classes):

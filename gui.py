@@ -239,6 +239,7 @@ class LIGHTFIELD_PT_list(Panel):
         buttons.operator("lightfield.render", icon='OUTLINER_DATA_CAMERA', text='Render Lightfield')
         layout.prop(scn, "lightfield_autoselect", text="Auto-select")
         layout.prop(scn, "lightfield_dryrun", text="Dry-run")
+        layout.prop(scn, "lightfield_donotoverwrite", text="Do not overwrite existing views.")
 
         operations = list.column()
 
