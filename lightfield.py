@@ -503,9 +503,14 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         bpy.ops.lightfield.export_config_append(filename=cam_pos.name, frame_number=frame_number)
 
         filename = cam_pos.name + extension
-        bpy.context.scene.render.filepath = os.path.join(output_directory, filename)
-        if not bpy.context.scene.lightfield_dryrun and not bpy.context.scene.lightfield_donotoverwrite:
-            bpy.ops.render.render(write_still=True)
+        filepath = os.path.join(output_directory, filename)
+        bpy.context.scene.render.filepath = filepath
+        exists = os.path.exists(filepath)
+        if not bpy.context.scene.lightfield_dryrun:
+            if not bpy.context.scene.lightfield_donotoverwrite or not exists:
+                bpy.ops.render.render(write_still=True)
+            else:
+                print("File %s already exists. Skipping." % filepath)
 
     def position_generator(self):
         """
