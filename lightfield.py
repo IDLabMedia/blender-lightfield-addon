@@ -508,6 +508,7 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
         exists = os.path.exists(filepath)
         if not bpy.context.scene.lightfield_dryrun:
             if not bpy.context.scene.lightfield_donotoverwrite or not exists:
+                print("Rendering %s..." % filepath)
                 bpy.ops.render.render(write_still=True)
             else:
                 print("File %s already exists. Skipping." % filepath)
