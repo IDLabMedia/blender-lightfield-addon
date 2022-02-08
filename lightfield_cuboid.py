@@ -113,7 +113,7 @@ class LightfieldCuboid(LightfieldPropertyGroup):
                                   phi=math.pi)
 
         elif side == 'l':
-            return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_z + x),
+            return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_y + x),
                                   -0.5,
                                   -0.5 + x * base_y,
                                    0.5 - y * base_z,
@@ -121,7 +121,7 @@ class LightfieldCuboid(LightfieldPropertyGroup):
                                   phi=math.pi / 2)
 
         elif side == 'r':
-            return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_z + x),
+            return CameraPosition("view_{}{:04d}f".format(side, y * self.num_cams_y + x),
                                    0.5,
                                    0.5 - x * base_y,
                                    0.5 - y * base_z,
