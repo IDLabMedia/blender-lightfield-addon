@@ -2,7 +2,7 @@
 bl_info = {
     'name': "6D Lightfield Renderer",
     'description': "Create different configurations of lightfields for rendering out scenes.",
-    'author': "De Pauw Stijn",
+    'author': "De Pauw Stijn, Courteaux Martijn",
     'version': (0, 1),
     'blender': (2, 80, 0),
     'location': "View3D > Tool Shelf > Lightfield || "
