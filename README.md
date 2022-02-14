@@ -53,7 +53,7 @@ Clicking the `+` sign on the left of that opens a dropdown that allows you to se
 
 Moving, rotating and scaling the camera setups can be done from the 3D Viewport. Changing the number of cameras and the camera intrinsics (resolution, focal length, etc.) is done in the `Object data properties` <img src="docs/data_properties_icon.PNG"  height="24"/>.
 
-**Rendering**: in the right Sidebar of the 3D Viewport, under tab `Lightfield > Output`, set the desired output path. Then start the rendering process by pressing the `Render Lightfield` button at the top of the Sidebar. Blender will now render one image for each camera in the setup and store them in the output folder. 
+**Rendering**: in the right Sidebar of the 3D Viewport, under tab `Lightfield > Output`, set the desired output path. Then start the rendering process by pressing the `Render Lightfield` button at the top of the Sidebar. Blender will now render one image for each camera in the setup and store them in the output folder. The images are stored as PNG files by default. It is possible to also store the depth maps by selecting the checkbox next to `Depth (OpenEXR)` in the Sidebar. This will, for each camera, combine the output image and depth into one `.exr` file, where the first 3 channels contain the (red, green, blue) color data, and the fourth channel the depth (by default in meters).
 
 **Camera config file**: by pressing the `Render Lightfield` button, a `lightfield.cfg` and `lightfield.json` file are created, containing information about the camera intrinsics (lens type, projection type, sensor width, resolution, etc.), the camera setup type (Plane, Cuboid, Cylinder, Sphere), and the position and rotation of each camera according to the Blender axial system (Z up, right-handed).
 
