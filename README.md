@@ -1,5 +1,7 @@
-# Blender addon for Light Field Rendering
+# Blender Addon for Light Field Rendering
 <img src="https://img.shields.io/badge/compatible-2.8+-orange?logo=blender&style=flat-square" />
+
+<img src="docs/teaser.PNG"  height="100"/> <img src="docs/teaser2.PNG"  height="100"/>
 
 This addon allows to **quickly create several multi-camera setups in Blender**. It automatically renders and saves the generated images (and depth information). The addon currently supports 4 basic multi-camera setup types, which can be combined to create large image datasets:
 
