@@ -46,12 +46,12 @@ To start using the addon in Blender, open the 3D Viewport view and type `N` to o
 <img src="docs/blender_lightfield_tab1.PNG"  height="350"/>
 </p>
 
-Clicking the `+` sign on the left of that opens a dropdown that allows you to select the desired camera setup. The options are: Lightfield Plane, Cuboid, Cylinder and Sphere. Selecting one creates a default camera setup of the chosen type. The setup can be configured in this Sidebar, as well as by going into the `Proporties` <img src="docs/properties_icon.PNG"  height="24"/> tab that is by default already open on the right side of Blender and selecting the `Object data properties` icon <img src="docs/data_properties_icon.PNG"  height="24"/>.
+Clicking the `+` sign on the left of that opens a dropdown that allows you to select the desired camera setup. The options are: Lightfield Plane, Cuboid, Cylinder and Sphere. Selecting one creates a default camera setup of the chosen type. The setup can be configured in this Sidebar, as well as by going into the `Proporties` <img src="docs/properties_icon2.PNG"  height="24"/> tab that is by default already open on the right side of Blender and selecting the `Object data properties` icon <img src="docs/data_properties_icon2.PNG"  height="24"/>.
 <p float="left">
 <img src="docs/blender_lightfield_tab2.PNG"/>
 </p>
 
-Moving, rotating and scaling the camera setups can be done from the 3D Viewport. Changing the number of cameras and the camera intrinsics (resolution, focal length, etc.) is done in the `Object data properties` <img src="docs/data_properties_icon.PNG"  height="24"/>.
+Moving, rotating and scaling the camera setups can be done from the 3D Viewport. Changing the number of cameras and the camera intrinsics (resolution, focal length, etc.) is done in the `Object data properties` <img src="docs/data_properties_icon2.PNG"  height="24"/>.
 
 **Rendering**: in the right Sidebar of the 3D Viewport, under tab `Lightfield > Output`, set the desired output path. Then start the rendering process by pressing the `Render Lightfield` button at the top of the Sidebar. Blender will now render one image for each camera in the setup and store them in the output folder. 
 
