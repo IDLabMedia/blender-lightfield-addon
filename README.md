@@ -3,10 +3,10 @@
 This addon allows to **quickly create several multi-camera setups in Blender**. It automatically renders and saves the generated images (and depth information). The addon currently supports 4 basic multi-camera setup types, which can be combined to create large image datasets:
 
 <p float="left">
-  <img src="/docs/Plane.png" width="170" />
-  <img src="/docs/Cuboid.png" width="170" />
-  <img src="/docs/Cylinder.png" width="170" />
-  <img src="/docs/Sphere.png" width="170" />
+  <img src="/docs/Plane.PNG" width="170" />
+  <img src="/docs/Cuboid.PNG" width="170" />
+  <img src="/docs/Cylinder.PNG" width="170" />
+  <img src="/docs/Sphere.PNG" width="170" />
 </p>
 
 - **Plane**: all cameras are positioned on a rectangular grid and rotated to look along the normal of the plane.
@@ -34,18 +34,18 @@ Windows: C:\Program Files\Blender Foundation\Blender\X.XX\scripts\addons
 Linux: /usr/share/blender/X.XX/scripts/addons/
 ```
 Create a new directory and copy all python files from this repository to that new directory. When opening Blender, go to `Edit > Preferences ... > Add-ons` and search for "6D Lightfield Renderer". Make sure the addon is enabled by checking the checkbox.
-<img src="docs/addon_window.png" height="200"/>
+<img src="docs/addon_window.PNG" height="200"/>
 
 ## Usage
 <img src="docs/settings.gif" />
 
 To start using the addon in Blender, open the 3D Viewport view and type `N` to open the right Sidebar. You will see a new tab there, called `Lightfield`. 
-<img src="docs/blender_lightfield_tab1.png"  height="300"/>
+<img src="docs/blender_lightfield_tab1.PNG"  height="300"/>
 
-Clicking the `+` sign on the left of that opens a dropdown that allows you to select the desired camera setup. The options are: Lightfield Plane, Cuboid, Cylinder and Sphere. Selecting one creates a default camera setup of the chosen type. The setup can be configured in this Sidebar, as well as by going into the `Proporties` <img src="docs/properties_icon.png"  height="16"/> tab that is by default already open on the right side of Blender and selecting the `Object data properties` icon <img src="docs/data_properties_icon.png"  height="16"/>.
-<img src="docs/blender_lightfield_tab2.png"/>
+Clicking the `+` sign on the left of that opens a dropdown that allows you to select the desired camera setup. The options are: Lightfield Plane, Cuboid, Cylinder and Sphere. Selecting one creates a default camera setup of the chosen type. The setup can be configured in this Sidebar, as well as by going into the `Proporties` <img src="docs/properties_icon.PNG"  height="16"/> tab that is by default already open on the right side of Blender and selecting the `Object data properties` icon <img src="docs/data_properties_icon.PNG"  height="16"/>.
+<img src="docs/blender_lightfield_tab2.PNG"/>
 
-Moving, rotating and scaling the camera setups can be done from the 3D Viewport. Changing the number of cameras and the camera intrinsics (resolution, focal length, etc.) is done in the `Object data properties` <img src="docs/data_properties_icon.png"  height="16"/>.
+Moving, rotating and scaling the camera setups can be done from the 3D Viewport. Changing the number of cameras and the camera intrinsics (resolution, focal length, etc.) is done in the `Object data properties` <img src="docs/data_properties_icon.PNG"  height="16"/>.
 
 **Rendering**: in the right Sidebar of the 3D Viewport, under tab `Lightfield > Output`, set the desired output path. Then start the rendering process by pressing the `Render Lightfield` button at the top of the Sidebar. Blender will now render one image for each camera in the setup and store them in the output folder. 
 
