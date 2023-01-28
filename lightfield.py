@@ -460,10 +460,10 @@ class LightfieldPropertyGroup(bpy.types.PropertyGroup):
             output_directory = self.get_output_image_directory()
             self.render_time_frame(output_directory, extension)
         else:
-            for i in range(self.sequence_start, self.sequence_end, self.sequence_steps):
+            for i in range(self.sequence_start, self.sequence_end+1, self.sequence_steps):
                 bpy.ops.lightfield.export_config(frame_number=i)
                 bpy.context.scene.frame_current = i
-                output_directory = self.get_output_image_directory(frame=i)
+                output_directory = self.get_output_image_directory(frame_number=i)
                 self.render_time_frame(output_directory, extension)
 
         # Reset parameters
