@@ -17,7 +17,7 @@ class EXPORT_OT_lightfield_config(bpy.types.Operator):
         lf = context.scene.lightfield[context.scene.lightfield_index]
         lf = (utils.get_lightfield_class(lf.lf_type))(lf)
 
-        os.makedirs(lf.get_output_directory(), exist_ok=True)
+        os.makedirs(lf.get_output_directory(frame_number=self.frame_number), exist_ok=True)
 
         with open(lf.get_path_config_file_json(self.frame_number), mode='w', newline='') as json_file:
             cam = lf.data_camera
